@@ -31,6 +31,8 @@ def read_file(fichier):
     for l in A:
         l.sort()
 
+    f.close()
+
     return (S, A)
 
 # 2 - Graphes
@@ -107,22 +109,3 @@ def algo_glouton(G):
         C.add(v)
         sommet, arete = delete_sommet((sommet, arete), v)
     return C
-
-
-#G_gen = generate_graphe(5, 0.5)
-#G_prim = delete_ens_sommet(G_gen, {1, 2})
-#print(G_gen)
-#print(G_prim)
-#t = degre_max_sommet(G)
-#print(t)
-G_read = read_file("exemple_instance.txt")
-print(G_read)
-
-C_c = algo_couplage(G_read)
-C_g = algo_glouton(G_read)
-
-print("C_c =", C_c)
-print("C_g =", C_g)
-
-#arete = getListArete(G_read)
-#print(arete)
