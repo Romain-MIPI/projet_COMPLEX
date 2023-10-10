@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 def write_file(t, fichier):
     f = open(fichier, "w")
     for i in range(len(t)):
-        f.write("%d : { "%(i+2))
-        for u in s[i]:
+        f.write("%d : {"%(i+2))
+        for u in t[i]:
             f.write(" %d"%u)
         f.write(" }\n")
     f.close()
@@ -20,7 +20,7 @@ s_couplage = []
 t_glouton = []
 s_glouton = []
 
-n = [i for i in range(2, 101)]
+n = [i for i in range(2, 51)]
 
 for i in n:
     G_gen = generate_graphe(i, 0.5)
@@ -58,5 +58,7 @@ plt.ylabel("temps en s")
 plt.savefig('courbe_t.png')
 plt.show() 
 
-write_file(t_couplage, "solutions_couplage.txt")
-write_file(t_glouton, "solutions_glouton.txt")
+#write_file(s_couplage, "solutions_couplage.txt")
+#write_file(s_glouton, "solutions_glouton.txt")
+
+print(compare_algo(s_couplage, s_glouton))

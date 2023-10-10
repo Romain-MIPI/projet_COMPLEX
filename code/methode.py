@@ -109,3 +109,10 @@ def algo_glouton(G):
         C.add(v)
         sommet, arete = delete_sommet((sommet, arete), v)
     return C
+
+
+def compare_algo(t_c, t_g):
+    diff = 0
+    for i in range(len(t_c)):
+        diff += len(t_c[i]) - len(t_g[i])
+    return diff/len(t_g)
