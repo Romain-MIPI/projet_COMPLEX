@@ -20,7 +20,7 @@ s_couplage = []
 t_glouton = []
 s_glouton = []
 
-n = [i for i in range(2, 51)]
+n = [i for i in range(2, 500)]
 
 for i in n:
     G_gen = generate_graphe(i, 0.5)

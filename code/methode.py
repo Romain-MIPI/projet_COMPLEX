@@ -112,7 +112,8 @@ def algo_glouton(G):
 
 
 def compare_algo(t_c, t_g):
-    diff = 0
+    coef = []
     for i in range(len(t_c)):
-        diff += len(t_c[i]) - len(t_g[i])
-    return diff/len(t_g)
+        if len(t_c[i]) != 0 and len(t_g[i]) != 0:
+            coef.append(len(t_c[i])/len(t_g[i]))
+    return np.mean(coef)
