@@ -3,6 +3,7 @@ sys.path.append("./")
 from methode import *
 import time
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def write_file(t, fichier):
@@ -68,11 +69,24 @@ for i in n:
 #plt.show() 
 
 # affichage diff/n
-plt.hist(s_couplage, bins=len(n))
-plt.hist(s_glouton, bins=len(n))
+x = np.arange(len(n))  # the label locations
+width = 0.35  # the width of the bars
+
+fig, ax = plt.subplots()
+rects1 = ax.bar(x - width/2, s_couplage, width, label='solutions couplage')
+rects2 = ax.bar(x + width/2, s_glouton, width, label='solutuon glouton')
+
+# Add some text for labels, title and custom x-axis tick labels, etc.
+ax.set_ylabel('nombre de sommets des solutions')
+ax.set_title('nombre de sommets genere')
+ax.set_xticks(x)
+ax.set_xticklabels(n)
+ax.legend()
+# plt.hist(s_couplage, bins=range(0,len(n)))
+# plt.hist(s_glouton, bins=range(0,len(n)))
 plt.show()
 
 #write_file(s_couplage, "solutions_couplage.txt")
 #write_file(s_glouton, "solutions_glouton.txt")
 
-print(compare_algo(s_couplage, s_glouton))
+# print(compare_algo(s_couplage, s_glouton))
