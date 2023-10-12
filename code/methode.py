@@ -118,22 +118,24 @@ def compare_algo(t_c, t_g):
             coef.append(len(t_c[i])/len(t_g[i]))
     return np.mean(coef)
 
-def brachement(G):
+def branchement(G):
     C = set()
     l_arete = getListArete(G)
     if l_arete:
         for arete in l_arete:
             u, v = arete
-            C_u = brachement(delete_sommet(G, u))
-            C_v = brachement(delete_sommet(G, v))
+            C_u = branchement(delete_sommet(copy.deepcopy(G), u))
+            C_u.add(u)
+            C_v = branchement(delete_sommet(copy.deepcopy(G), v))
+            C_v.add(v)
             if len(C_u) > len(C_v):
-                C.add(v)
+                return C.union(C_v)
             else:
-                C.add(u)
-        return C
+                return C.union(C_u)
     else:
         return C
     
 G = read_file("../instance/exemple_instance.txt")
-C = brachement(G)
+#G = ([0, 1, 2, 3, 4], [[1], [0, 2], [1, 3], [2, 4], [3]])
+C = branchement(G)
 print(C)
