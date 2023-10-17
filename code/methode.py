@@ -119,19 +119,38 @@ def compare_algo(t_c, t_g):
     return np.mean(coef)
 
 def branchement(G):
+    # initialisation borne
+    b_inf = 0
+    b_sup = np.inf()
+
+    # initialisation C
     C = set()
+
+    # initialisation pile
+    pile = []
+
+
+    sommets, aretes = G
     l_arete = getListArete(G)
-    if l_arete:
-        for arete in l_arete:
-            u, v = arete
-            C_u = branchement(delete_sommet(copy.deepcopy(G), u))
-            C_u.add(u)
-            C_v = branchement(delete_sommet(copy.deepcopy(G), v))
-            C_v.add(v)
-            if len(C_u) > len(C_v):
-                return C.union(C_v)
-            else:
-                return C.union(C_u)
+    n = len(sommets)
+    m = len(l_arete)
+    s_degMax = degre_max_sommet(G)
+    delta = len(aretes[s_degMax])
+    M = algo_couplage(G)
+    b1 = np.ceil(m/delta)
+    b2 = len(M)
+    b3 = ((2*n)-1-np.sqrt(((2*n-1)**2)-(8*m)))/2
+    while (l_arete):
+        u, v = l_arete.pop(0)   # on prend une arête
+        pile.append(u)
+        pile.append(v)
+
+        G_u = branchement(delete_sommet(copy.deepcopy(G), u))
+        C_v = branchement(delete_sommet(copy.deepcopy(G), v))
+        if len(C_u) > len(C_v):
+            return C.union(C_v)
+        else:
+            return C.union(C_u)
     else:
         return C
     
