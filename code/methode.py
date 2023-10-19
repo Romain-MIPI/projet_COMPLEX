@@ -148,10 +148,11 @@ def branchement(G):
                 b_sup = len(best_cover)
         else:
             # Élagage si la borne supérieure est trop grande
-            if borne_inf(current_graph) >= b_sup:
+            if borne_inf(current_graph)+len(current_cover) >= b_sup:
                 continue
             u,v = aretes[0]
             couplage = algo_couplage(current_graph)
+            couplage = couplage.union(current_cover)
             # Mise à jour de la meilleure couverture si nécessaire
             best_cover = couplage if len(couplage) < b_sup else best_cover
             b_sup = min(len(couplage),b_sup)
