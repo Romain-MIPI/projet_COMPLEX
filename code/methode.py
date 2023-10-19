@@ -130,7 +130,26 @@ def borne_inf(G_bis):
     return max(b1,b2,b3)
 
 def branchement(G):
-    return
+    # Initialisation : borne supérieure = sommets du graphe initial
+    best_cover = G[0]
+
+    # Initialisation de la pile
+    pile = [(G, set())]
+    while pile:
+        current_graph, current_cover = pile.pop()
+        aretes = getListArete(current_graph)
+
+        # Élagage si toutes les arêtes sont couvertes
+        if len(aretes)==0:
+            # Élagage : si la couverture actuelle est meilleure que la meilleure trouvée jusqu'à présent
+            if len(current_cover) < len(best_cover):
+                best_cover = current_cover
+        else:
+            u,v = aretes[0]
+            # Exploration des nœuds enfants
+            pile.append((delete_sommet(current_graph, u),current_cover | {u}))
+            pile.append((delete_sommet(current_graph, v),current_cover | {v}))
+    return best_cover
 
 def branchement_borne(G):
     # Initialisation : borne supérieure = sommets du graphe initial
@@ -247,7 +266,7 @@ def branchement_ameliore_q2(G):
             pile.append((delete_ens_sommet(current_graph, voisin_u),current_cover | voisin_u))
     return best_cover
     
-#G = read_file("../instance/exemple_instance.txt")
-G = ([0, 1, 2, 3], [[1], [0, 2, 3], [1], [1]])
-C = branchement_ameliore_q1(G)
+G = read_file("../instance/exemple_instance.txt")
+#G = ([0, 1, 2, 3], [[1], [0, 2, 3], [1], [1]])
+C = branchement(G)
 print(C)
