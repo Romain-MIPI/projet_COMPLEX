@@ -50,8 +50,8 @@ def delete_sommet(G, v):
 
 def delete_ens_sommet(G, V):
     for v in V:
-        G_prim = delete_sommet(G_prim, v)
-    return G_prim
+        G = delete_sommet(G, v)
+    return G
 
 def generate_graphe(n, p):
     sommet = [i for i in range(n)]
@@ -108,7 +108,7 @@ def compare_algo(t_c, t_g):
     for i in range(len(t_c)):
         if len(t_c[i]) != 0 and len(t_g[i]) != 0:
             coef.append(len(t_c[i])/len(t_g[i]))
-    return np.mean(coef)
+    return max(coef), np.mean(coef)
 
 # 4 -  Séparation et évaluation
 def degre_max_sommet(G):
@@ -130,6 +130,9 @@ def borne_inf(G_bis):
     return max(b1,b2,b3)
 
 def branchement(G):
+    return
+
+def branchement_borne(G):
     # Initialisation : borne supérieure = sommets du graphe initial
     best_cover = G[0]
     b_sup = len(best_cover)
@@ -161,9 +164,90 @@ def branchement(G):
             pile.append((delete_sommet(current_graph, v),current_cover | {v}))
     return best_cover
 
-            
+def branchement_ameliore_q1(G):
+    # Initialisation : borne supérieure = sommets du graphe initial
+    best_cover = G[0]
+    b_sup = len(best_cover)
+
+    # Initialisation de la pile
+    pile = [(G, set())]
+    while pile:
+        print("pile =", pile)
+        print("best_cover =", best_cover)
+        current_graph, current_cover = pile.pop()
+        aretes = getListArete(current_graph)
+
+        # Élagage si toutes les arêtes sont couvertes
+        if len(aretes)==0:
+            # Élagage : si la couverture actuelle est meilleure que la meilleure trouvée jusqu'à présent
+            if len(current_cover) < b_sup:
+                best_cover = current_cover
+                b_sup = len(best_cover)
+                print("changement best_cover =", best_cover)
+        else:
+            # Élagage si la borne supérieure est trop grande
+            if borne_inf(current_graph)+len(current_cover) >= b_sup:
+                print("on elague")
+                continue
+            u,v = aretes[0]
+            couplage = algo_couplage(current_graph)
+            couplage = couplage.union(current_cover)
+            # Mise à jour de la meilleure couverture si nécessaire
+            best_cover = couplage if len(couplage) < b_sup else best_cover
+            b_sup = min(len(couplage),b_sup)
+            # Exploration des nœuds enfants
+            current_sommet, current_s_adj = current_graph
+            voisin_u = set(current_s_adj[current_sommet.index(u)])
+            print("u, v =", u, v)
+            print("voisin_u =", voisin_u)
+            pile.append((delete_sommet(current_graph, u),current_cover | {u}))
+            pile.append((delete_ens_sommet(current_graph, voisin_u),current_cover | voisin_u))
+    return best_cover
+
+def branchement_ameliore_q2(G):
+    # Initialisation : borne supérieure = sommets du graphe initial
+    best_cover = G[0]
+    b_sup = len(best_cover)
+
+    # Initialisation de la pile
+    pile = [(G, set())]
+    while pile:
+        print("pile =", pile)
+        print("best_cover =", best_cover)
+        current_graph, current_cover = pile.pop()
+        aretes = getListArete(current_graph)
+
+        # Élagage si toutes les arêtes sont couvertes
+        if len(aretes)==0:
+            # Élagage : si la couverture actuelle est meilleure que la meilleure trouvée jusqu'à présent
+            if len(current_cover) < b_sup:
+                best_cover = current_cover
+                b_sup = len(best_cover)
+                print("changement best_cover =", best_cover)
+        else:
+            # Élagage si la borne supérieure est trop grande
+            if borne_inf(current_graph)+len(current_cover) >= b_sup:
+                print("on elague")
+                continue
+            # Recherche du sommet de degré max
+            u = sommet_degree_max(current_graph)
+            current_sommet, current_s_adj = current_graph
+            v = current_s_adj[current_sommet.index(u)][0]   # un sommet voisin de u
+
+            couplage = algo_couplage(current_graph)
+            couplage = couplage.union(current_cover)
+            # Mise à jour de la meilleure couverture si nécessaire
+            best_cover = couplage if len(couplage) < b_sup else best_cover
+            b_sup = min(len(couplage),b_sup)
+            # Exploration des nœuds enfants
+            voisin_u = set(current_s_adj[current_sommet.index(u)])
+            print("u, v =", u, v)
+            print("voisin_u =", voisin_u)
+            pile.append((delete_sommet(current_graph, u),current_cover | {u}))
+            pile.append((delete_ens_sommet(current_graph, voisin_u),current_cover | voisin_u))
+    return best_cover
     
-G = read_file("../instance/exemple_instance.txt")
-#G = ([0, 1, 2, 3, 4], [[1], [0, 2], [1, 3, 4], [2, 4], [3]])
-C = branchement(G)
+#G = read_file("../instance/exemple_instance.txt")
+G = ([0, 1, 2, 3], [[1], [0, 2, 3], [1], [1]])
+C = branchement_ameliore_q1(G)
 print(C)
