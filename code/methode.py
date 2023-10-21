@@ -1,6 +1,9 @@
 import numpy as np
 import copy
 import sys
+import time
+import matplotlib.pyplot as plt
+import numpy as np
 sys.path.append("../..")
 
 def read_file(fichier):
@@ -60,7 +63,7 @@ def generate_graphe(n, p):
         for j in range(n):
             if j > i:
                 succes = np.random.rand()
-                if succes > p:
+                if succes > 1-p:
                     arete[i].append(j)
                     arete[j].append(i)
     return (sommet, arete)
@@ -265,8 +268,190 @@ def branchement_ameliore_q2(G):
             pile.append((delete_sommet(current_graph, u),current_cover | {u}))
             pile.append((delete_ens_sommet(current_graph, voisin_u),current_cover | voisin_u))
     return best_cover
-    
-G = read_file("../instance/exemple_instance.txt")
+
+def write_file(t, fichier):
+    f = open(fichier, "w")
+    for i in range(len(t)):
+        f.write("%d : {"%(i+2))
+        for u in t[i]:
+            f.write(" %d"%u)
+        f.write(" }\n")
+    f.close()
+
+def compare_en_n():
+    t_couplage = []
+    s_couplage = []
+    t_glouton = []
+    s_glouton = []
+
+    n = [i for i in range(10, 101, 10)]
+
+    for i in n:
+        tc_i = []
+        tg_i = []
+        sc_i = []
+        sg_i = []
+        
+        #print("\n------------------------------------------------------------\n")
+        #print("i =%d\n"%i)
+
+        for j in range(10):
+            G_gen = generate_graphe(i, 0.5)
+
+            #print("algo_couplage:")
+
+            debut_couplage = time.time()
+            s = algo_couplage(G_gen)
+            fin_couplage = time.time()
+
+            t = fin_couplage-debut_couplage
+            tc_i.append(t)
+            sc_i.append(len(s))
+            #print("t = %f"%t)
+            #print("s =", s)
+
+            #print("\nalgo glouton:")
+
+            debut_glouton = time.time()
+            s = algo_glouton(G_gen)
+            fin_glouton = time.time()
+
+            t = fin_glouton-debut_glouton
+            tg_i.append(t)
+            sg_i.append(len(s))
+            #print("t = %f"%t)
+            #print("s =", s)
+
+        t_couplage.append(np.mean(tc_i))
+        t_glouton.append(np.mean(tg_i))
+        s_couplage.append(np.mean(sc_i))
+        s_glouton.append(np.mean(sg_i))
+
+    # affichage t/n
+    plt.plot(n, t_couplage)
+    plt.plot(n, t_glouton)
+    plt.title("courbe de temps en fonction de n")
+    plt.xlabel("taille n")
+    plt.ylabel("temps en s")
+    plt.legend(["algo_couplage", "algo_glouton"])
+    plt.savefig('courbe_t_n.png')
+    plt.show()
+
+    # affichage diff/n
+    x = np.arange(len(n))  # the label locations
+    width = 0.35  # the width of the bars
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width/2, s_couplage, width, label='solutions couplage')
+    rects2 = ax.bar(x + width/2, s_glouton, width, label='solutuon glouton')
+
+    ax.set_xlabel('taille n')
+    ax.set_ylabel('nombre de sommets')
+    ax.set_title('nombre de sommets trouvé en fonction de n')
+    ax.set_xticks(x)
+    ax.set_xticklabels(n)
+    ax.legend()
+    plt.savefig("hist_n.png")
+    plt.show()
+
+    #écriture des solutions dans un fichier
+    #write_file(s_couplage, "solutions_couplage.txt")
+    #write_file(s_glouton, "solutions_glouton.txt")
+
+    #print(compare_algo(s_couplage, s_glouton))
+
+    return
+
+def compare_en_p():
+    t_couplage = []
+    s_couplage = []
+    t_glouton = []
+    s_glouton = []
+
+    p_n = [i/10 for i in range(1, 11)]
+
+    for p in p_n:
+        tc_i = []
+        tg_i = []
+        sc_i = []
+        sg_i = []
+        
+        #print("\n------------------------------------------------------------\n")
+        #print("i =%d\n"%i)
+
+        for j in range(10):
+            G_gen = generate_graphe(100, p)
+
+            #print("algo_couplage:")
+
+            debut_couplage = time.time()
+            s = algo_couplage(G_gen)
+            fin_couplage = time.time()
+
+            t = fin_couplage-debut_couplage
+            tc_i.append(t)
+            sc_i.append(len(s))
+            #print("t = %f"%t)
+            #print("s =", s)
+
+            #print("\nalgo glouton:")
+
+            debut_glouton = time.time()
+            s = algo_glouton(G_gen)
+            fin_glouton = time.time()
+
+            t = fin_glouton-debut_glouton
+            tg_i.append(t)
+            sg_i.append(len(s))
+            #print("t = %f"%t)
+            #print("s =", s)
+
+        t_couplage.append(np.mean(tc_i))
+        t_glouton.append(np.mean(tg_i))
+        s_couplage.append(np.mean(sc_i))
+        s_glouton.append(np.mean(sg_i))
+
+    # affichage t/n
+    plt.plot(p_n, t_couplage)
+    plt.plot(p_n, t_glouton)
+    plt.title("courbe de temps en fonction de p")
+    plt.xlabel("probabilité p")
+    plt.ylabel("temps en s")
+    plt.legend(["algo_couplage", "algo_glouton"])
+    plt.savefig('courbe_t_p.png')
+    plt.show() 
+
+    # affichage diff/n
+    x = np.arange(len(p_n))  # the label locations
+    width = 0.35  # the width of the bars
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width/2, s_couplage, width, label='solutions couplage')
+    rects2 = ax.bar(x + width/2, s_glouton, width, label='solutuon glouton')
+
+    ax.set_xlabel('probabilité p')
+    ax.set_ylabel('nombre de sommets')
+    ax.set_title('nombre de sommets trouvé en fonction de p')
+    ax.set_xticks(x)
+    ax.set_xticklabels(p_n)
+    ax.legend(loc="lower right")
+    plt.savefig("hist_p.png")
+    plt.show()
+
+    #écriture des solutions dans un fichier
+    #write_file(s_couplage, "solutions_couplage.txt")
+    #write_file(s_glouton, "solutions_glouton.txt")
+
+    #print(compare_algo(s_couplage, s_glouton))
+
+    return
+
+#G = read_file("../instance/exemple_instance.txt")
 #G = ([0, 1, 2, 3], [[1], [0, 2, 3], [1], [1]])
-C = branchement(G)
-print(C)
+#print("Q1 :")
+#C = branchement_ameliore_q1(G)
+#print(C)
+
+#print("\n-------------------------------------------------\nQ2 :")
+#C2 = branchement_ameliore_q2(G)
+#print(C2)
