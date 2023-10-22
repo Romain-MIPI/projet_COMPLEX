@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from copy import deepcopy
 sys.path.append("../..")
-_BRANCHEMENT = ["branchement","branchement_borne","branchement_ameliore_q1","branchement_ameliore_q2"]
+
 def read_file(chemin_fichier):
     """
     Lit un fichier pour construire et retourner un graphe sous forme de liste d'adjacence.
@@ -212,25 +212,19 @@ def compare_algo(t_c, t_g):
     return max(coef), np.mean(coef)
 
 # 4 -  Séparation et évaluation
-def degre_max_sommet(G):
-    sommet, l_aretes = G
-    t_degre = [len(sublist) for sublist in l_aretes]
-    return max(t_degre)
-
-def borne_inf(G_bis):
-    """Calcule des valeurs de b1, b2 et b3 afin d'obtenir une borne inf pour le branchement."""
-    sommets = G_bis[0]
-    aretes = get_liste_aretes(G_bis)
-    n = len(sommets)
-    m = len(aretes)
-    couplage = algo_couplage(G_bis)
-    delta = degre_max_sommet(G_bis)
-    b1 = np.ceil(m/delta)
-    b2 = len(couplage)//2
-    b3 = ((2*n)-1-np.sqrt(((2*n-1)**2)-(8*m)))/2
-    return max(b1,b2,b3)
 
 def branchement(G):
+    """
+    Exécute un algorithme de branchement basique pour trouver une couverture de sommets minimale. (exo: 4.1)
+
+    Paramètres:
+    - G : Le graphe initial représenté par une liste d'adjacence.
+
+    Retourne:
+    - Un tuple contenant deux éléments :
+        1) L'ensemble de sommets formant la meilleure couverture trouvée.
+        2) Le nombre total de noeuds explorés dans l'arbre de branchement.
+    """
     # Initialisation : borne supérieure = sommets du graphe initial
     best_cover = G[0]
     compteur_noeud = 0
@@ -255,7 +249,46 @@ def branchement(G):
             compteur_noeud += 2
     return best_cover, compteur_noeud
 
+def borne_inf(G):
+    """
+    Calcule une borne inférieure pour l'algorithme de branchement en utilisant trois méthodes différentes 
+    et retourne la plus grande valeur obtenue.
+
+    Les trois méthodes sont :
+    1) b1 = ceil(m/delta) où m est le nombre d'arêtes et delta est le degré maximal d'un sommet.
+    2) b2 est le couplage. (nombre d'aretes)
+    3) b3 est calculé à partir de la formule donnée utilisant m et n (nombre de sommets).
+
+    Paramètres:
+    - G : Le graphe en entrée, représenté par un tuple d'une liste de sommets et d'une liste d'adjacence.
+
+    Retourne:
+    - La valeur maximale parmi b1, b2, et b3.
+    """
+    sommets = G[0]
+    aretes = get_liste_aretes(G)
+    n = len(sommets)
+    m = len(aretes)
+    couplage = algo_couplage(G)
+    delta = max(degre_sommets(G))
+    b1 = np.ceil(m/delta)
+    b2 = len(couplage)//2
+    b3 = ((2*n)-1-np.sqrt(((2*n-1)**2)-(8*m)))/2
+    return max(b1,b2,b3)
+
 def branchement_borne(G):
+    """
+    Exécute un algorithme de branchement borné avec élagage basé sur des bornes inférieures et supérieures 
+    pour trouver une couverture de sommets minimale.
+
+    Paramètres:
+    - G : Le graphe en entrée, représenté par un tuple d'une liste de sommets et d'une liste d'adjacence.
+
+    Retourne:
+    - Un tuple contenant deux éléments :
+        1) L'ensemble de sommets formant la meilleure couverture trouvée.
+        2) Le nombre total de noeuds explorés dans l'arbre de branchement.
+    """
     # Initialisation : borne supérieure = sommets du graphe initial
     best_cover = G[0]
     b_sup = len(best_cover)
@@ -291,6 +324,19 @@ def branchement_borne(G):
     return best_cover, compteur_noeud
 
 def branchement_ameliore_q1(G):
+    """
+    Exécute un algorithme de branchement amélioré de question 1 pour trouver une couverture de sommets minimale. (exo: 4.3.1)
+
+    Cette version est une amélioration de branchement borne de branchement avec élagage. 
+
+    Paramètres:
+    - G : Le graphe en entrée, représenté par un tuple d'une liste de sommets et d'une liste d'adjacence.
+
+    Retourne:
+    - Un tuple contenant deux éléments :
+        1) L'ensemble de sommets formant la meilleure couverture trouvée.
+        2) Le nombre total de noeuds explorés dans l'arbre de branchement.
+    """
     # Initialisation : borne supérieure = sommets du graphe initial
     best_cover = G[0]
     b_sup = len(best_cover)
@@ -334,6 +380,17 @@ def branchement_ameliore_q1(G):
     return best_cover, compteur_noeud
 
 def branchement_ameliore_q2(G):
+    """
+    Exécute un algorithme de branchement amélioré de question 2 pour trouver une couverture de sommets minimale. (exo: 4.3.2)
+
+    Paramètres:
+    - G : Le graphe en entrée, représenté par un tuple d'une liste de sommets et d'une liste d'adjacence.
+
+    Retourne:
+    - Un tuple contenant deux éléments :
+        1) L'ensemble de sommets formant la meilleure couverture trouvée.
+        2) Le nombre total de noeuds explorés dans l'arbre de branchement.
+    """
     # Initialisation : borne supérieure = sommets du graphe initial
     best_cover = G[0]
     b_sup = len(best_cover)
@@ -388,9 +445,9 @@ def write_file(t, fichier):
         f.write(" }\n")
     f.close()
 
-######### Methodes pour la comparaison de l'algorithme couplage et glouton
-
 ######### Methodes pour la comparaison des algorithmes
+
+_BRANCHEMENT = ["branchement","branchement_borne","branchement_ameliore_q1","branchement_ameliore_q2"]
 
 def measure_algo_time_and_solution_and_noeuds(algo, G_gen):
     """
@@ -595,7 +652,7 @@ def compare_en_p(algos, p_step=10, n_fixe=100):
     if nb_noeuds:
         plot_graph_solutions_noeuds(p_n,nb_noeuds,"p")
 
-    #écriture des solutions dans un fichier
+    # écriture des solutions dans un fichier
     #write_file(s_couplage, "solutions_couplage.txt")
     #write_file(s_glouton, "solutions_glouton.txt")
 

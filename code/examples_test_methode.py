@@ -33,3 +33,17 @@ print(f"{couverture_couplage=}")
 
 couverture_glouton = algo_glouton(G)
 print(f"{couverture_glouton=}")
+
+# 4. Séparation et évaluation
+
+branchement_basique = branchement(G)
+print(f"{branchement_basique=}")
+
+branchement_bornee = branchement_borne(G)
+print(f"{branchement_borne=}")
+
+branchement_ameliore_1 = branchement_ameliore_q1(G)
+print(f"{branchement_ameliore_1=}")
+
+branchement_ameliore_2 = branchement_ameliore_q2(G)
+print(f"{branchement_ameliore_2}")
