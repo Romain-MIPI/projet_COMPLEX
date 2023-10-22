@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from copy import deepcopy
 sys.path.append("../..")
-
+_BRANCHEMENT = ["branchement","branchement_borne","branchement_ameliore_q1","branchement_ameliore_q2"]
 def read_file(chemin_fichier):
     """
     Lit un fichier pour construire et retourner un graphe sous forme de liste d'adjacence.
@@ -390,10 +390,12 @@ def write_file(t, fichier):
 
 ######### Methodes pour la comparaison de l'algorithme couplage et glouton
 
-def measure_algo_time_and_solution(algo, G_gen):
+######### Methodes pour la comparaison des algorithmes
+
+def measure_algo_time_and_solution_and_noeuds(algo, G_gen):
     """
-    Mesure le temps d'exécution d'un algorithme et la taille de la solution obtenue.
-    Fonction auxiliaire pour les méthodes "compare_en_n" et compare_en_p".
+    Mesure le temps d'exécution d'un algorithme, la taille de la solution obtenue et le nombre de nœuds créés si applicable.
+    Fonction auxiliaire pour les méthodes "compare_en_n" et "compare_en_p".
 
     Paramètres:
     - algo: Une fonction représentant l'algorithme à évaluer.
@@ -402,132 +404,196 @@ def measure_algo_time_and_solution(algo, G_gen):
     Retourne:
     - Le temps d'exécution de l'algorithme (en secondes).
     - La taille de la solution produite par l'algorithme.
+    - Le nombre de nœuds créés par l'algorithme (si applicable, sinon None).
     """
     start_time = time.time()
-    solution = algo(G_gen)
+    nb_noeud = None
+    if algo.__name__ in _BRANCHEMENT:
+        solution,nb_noeud = algo(G_gen)
+    else:
+        solution = algo(G_gen)
     end_time = time.time()
-    return end_time - start_time, len(solution)
+    return end_time - start_time, len(solution), nb_noeud
 
-def plot_time_graph(n, temps_couplage, temps_glouton):
+def plot_time_graph(n_p, temps,compare_en):
     """
-    Affiche deux courbe représentant le temps d'exécution des deux algorithmes en fonction de la taille n.
-    Fonction auxiliaire pour les méthodes "compare_en_n" et compare_en_p".
+    Affiche des courbes représentant le temps d'exécution des algorithmes en fonction de la variable spécifiée par "compare_en".
+    Fonction auxiliaire pour les méthodes "compare_en_n" et "compare_en_p".
     
     Paramètres:
-    - n: Une liste indiquant le nombre de sommets des graphes.
-    - temps_couplage: Une liste représentant le temps d'exécution de l'algo_couplage pour chaque taille dans n.
-    - temps_glouton: Une liste représentant le temps d'exécution de l'algo_glouton pour chaque taille dans n.
+    - n_p: Une liste des valeurs (tailles ou probabilités) utilisées pour générer les graphes.
+    - temps: Un dictionnaire où les clés sont les noms des algorithmes et les valeurs sont des listes 
+             représentant le temps d'exécution de cet algorithme pour chaque valeur dans n.
+    - compare_en: Une chaîne spécifiant la variable utilisée pour la comparaison. Doit être soit "n" (pour la taille du graphe) 
+                  soit "p" (pour la probabilité d'arêtes). Cette valeur est utilisée pour définir les titres et légendes du graphique.
     """
-    plt.plot(n, temps_couplage, label="algo_couplage")
-    plt.plot(n, temps_glouton, label="algo_glouton")
-    plt.title("courbe de temps en fonction de n")
-    plt.xlabel("taille n")
+    line_styles = ['-', '--', '-.', ':', '_']
+    markers = ['o', 's', '*', '^', 'v', '<']
+    for index, (algo_name, execution_times) in enumerate(temps.items()):
+        plt.plot(n_p, execution_times, label=algo_name, linestyle=line_styles[index], marker=markers[index], linewidth=1.5)
+    plt.title(f"courbe de temps en fonction de {compare_en}")
+    plt.xlabel(f"valeur {compare_en}")
     plt.ylabel("temps en s")
     plt.legend()
     plt.savefig('courbe_t_n.png')
     plt.show()
 
-def plot_solution_histogram(n, solutions_couplage, solutions_glouton):
-    """
-    Affiche un histogramme comparant la taille de couverture trouvé par deux algorithmes en fonction de la taille n.
-    Fonction auxiliaire pour les méthodes "compare_en_n" et compare_en_p".
 
+def plot_graph_solutions_noeuds(n,nb_noeuds,compare_en):
+    """
+    Affiche des courbes représentant le nombre de nœuds créés par les algorithmes en fonction de la variable spécifiée par "compare_en".
+    
+    Cette fonction est utilisée pour visualiser le nombre de nœuds créés pendant l'exécution des algorithmes 
+    de branchement pour différentes tailles de graphe ou probabilités d'arêtes.
+    
     Paramètres:
-    - n: Une liste indiquant le nombre de sommets des graphes.
-    - solutions_couplage: Une liste représentant la couverture trouvée par l'algo_couplage pour chaque taille dans n.
+    - n: Une liste des valeurs (tailles ou probabilités) utilisées pour générer les graphes.
+    - nb_noeuds: Un dictionnaire où les clés sont les noms des algorithmes et les valeurs sont des listes 
+                 représentant le nombre de nœuds créés par cet algorithme pour chaque valeur dans n.
+    - compare_en: Une chaîne spécifiant la variable utilisée pour la comparaison. Doit être soit "n" (pour la taille du graphe) 
+                  soit "p" (pour la probabilité d'arêtes). Cette valeur est utilisée pour définir les titres et légendes du graphique.
+    """
+    line_styles = ['-', '--', '-.', ':', '_']
+    markers = ['o', 's', '*', '^', 'v', '<']
+    for index, (algo_name, execution_times) in enumerate(nb_noeuds.items()):
+        plt.plot(n, execution_times, label=algo_name, linestyle=line_styles[index], marker=markers[index], linewidth=1.5)
+    plt.title(f"courbe de nombre de noeuds crées en fonction de {compare_en}")
+    plt.xlabel(f"valeur {compare_en}")
+    plt.ylabel("nombre de noeuds créés")
+    plt.legend()
+    plt.savefig('courbe_branchement_noeud_n.png')
+    plt.show()
+
+def plot_solution_histogram(n, solutions,compare_en):
+    """
+    Affiche un histogramme comparant la taille de la couverture trouvée par plusieurs algorithmes 
+    en fonction de la variable spécifiée par "compare_en".
+    
+    Cette fonction est utilisée pour visualiser la taille de la couverture trouvée par différents algorithmes
+    pour différentes tailles de graphe ou probabilités d'arêtes.
+    
+    Paramètres:
+    - n: Une liste des valeurs (tailles ou probabilités) utilisées pour générer les graphes.
+    - solutions: Un dictionnaire où les clés sont les noms des algorithmes et les valeurs sont des listes 
+                 représentant la taille de la couverture trouvée par cet algorithme pour chaque valeur dans n.
+    - compare_en: Une chaîne spécifiant la variable utilisée pour la comparaison. Doit être soit "n" (pour la taille du graphe) 
+                  soit "p" (pour la probabilité d'arêtes). Cette valeur est utilisée pour définir les titres et légendes de l'histogramme.
     """
     x = np.arange(len(n))
-    width = 0.35
+    width = 0.35 / len(solutions) 
     fig, ax = plt.subplots()
-    ax.bar(x - width/2, solutions_couplage, width, label='solutions couplage')
-    ax.bar(x + width/2, solutions_glouton, width, label='solutuon glouton')
-    ax.set_xlabel('taille n')
+
+    print(f"{solutions=}")
+    for idx, (algo_name, cover_sizes) in enumerate(solutions.items()):
+        ax.bar(x + idx*width, cover_sizes, width, label=algo_name)
+
+    ax.set_xlabel(f'valeur {compare_en}')
     ax.set_ylabel('nombre de sommets')
-    ax.set_title('nombre de sommets trouvé en fonction de n')
+    ax.set_title(f'nombre de sommets trouvé en fonction de {compare_en}')
     ax.set_xticks(x)
     ax.set_xticklabels(n)
     ax.legend()
     plt.savefig("hist_n.png")
     plt.show()
 
-def compare_en_n(n_debut=10, n_fin=101, step=10):
+
+def compare_en_n(algos, n_debut=10, n_fin=101, step=10, p_fixe=0.5):
     """
-    Compare les temps d'exécution et les couvertures trouvées par deux algorithmes sur des graphes de tailles différentes.
+    Compare les temps d'exécution, les couvertures trouvées et le nombre de nœuds créés par une liste d'algorithmes sur des graphes de tailles différentes.
 
     Cette fonction génère des graphes aléatoires avec des tailles variant de `n_debut` à `n_fin` par étapes de `step`. 
-    Pour chaque graphe, elle mesure le temps d'exécution et le nombre de sommets trouvés(couverture) par `algo_couplage` et `algo_glouton`.
-    Ensuite, elle affiche deux graphiques: un montrant le temps d'exécution en fonction de la taille n du graphe 
-    et un autre montrant le nombre de sommets de la couverture trouvée en fonction de la taille du graphe.
+    Pour chaque graphe, elle mesure le temps d'exécution, le nombre de sommets trouvés (couverture) et le nombre de nœuds créés pour chaque algorithme dans la liste `algos`.
+    Ensuite, elle affiche trois graphiques :
+        - Un montrant le temps d'exécution en fonction de la taille du graphe.
+        - Un autre montrant le nombre de sommets de la couverture trouvée en fonction de la taille du graphe.
+        - Et un dernier illustrant le nombre de nœuds créés par les algorithmes en fonction de la taille du graphe.
 
     Paramètres:
+    - algos: Liste des algorithmes à comparer.
     - n_debut: La taille initiale du graphe (valeur par défaut: 10).
     - n_fin: La taille finale du graphe (valeur par défaut: 101).
     - step: L'intervalle d'augmentation de la taille du graphe (valeur par défaut: 10).
+    - p_fixe: Probabilité utilisée pour la génération aléatoire du graphe (valeur par défaut: 0.5).
     """
-    temps_couplage,temps_glouton = [], []
-    solutions_couplage, solutions_glouton = [], []
+    temps = {algo.__name__: [] for algo in algos}
+    solutions = {algo.__name__: [] for algo in algos}
+    nb_noeuds = {algo.__name__: [] for algo in algos if algo.__name__ in _BRANCHEMENT}
 
     n = list(range(n_debut, n_fin, step))
 
     for i in n:
-        tc_i, tg_i, sc_i, sg_i = [], [], [], []
+        temps_i = {algo.__name__: [] for algo in algos}
+        solutions_i = {algo.__name__: [] for algo in algos}
+        noeud_i = {algo.__name__: [] for algo in algos if algo.__name__ in _BRANCHEMENT}
 
         for _ in range(10):
-            G_gen = generate_graphe(i, 0.5)
-            
-            t, s = measure_algo_time_and_solution(algo_couplage, G_gen)
-            tc_i.append(t)
-            sc_i.append(s)
+            G_gen = generate_graphe(i, p_fixe)
+            for algo in algos:
+                t, s, noeuds= measure_algo_time_and_solution_and_noeuds(algo, G_gen)
+                temps_i[algo.__name__].append(t)
+                solutions_i[algo.__name__].append(s)
+                if noeuds:
+                    noeud_i[algo.__name__].append(noeuds)
 
-            t, s = measure_algo_time_and_solution(algo_glouton, G_gen)
-            tg_i.append(t)
-            sg_i.append(s)
+        for algo in algos:
+            temps[algo.__name__].append(np.mean(temps_i[algo.__name__]))
+            solutions[algo.__name__].append(np.mean(solutions_i[algo.__name__]))
+            if algo.__name__ in _BRANCHEMENT:
+                nb_noeuds[algo.__name__].append(np.mean(noeud_i[algo.__name__]))
 
-        temps_couplage.append(np.mean(tc_i))
-        temps_glouton.append(np.mean(tg_i))
-        solutions_couplage.append(np.mean(sc_i))
-        solutions_glouton.append(np.mean(sg_i))
-
-    plot_time_graph(n,temps_couplage,temps_glouton)
-    plot_solution_histogram(n,solutions_couplage,solutions_glouton)
+    plot_time_graph(n,temps, "p")
+    plot_solution_histogram(n,solutions,"p")
+    if nb_noeuds:
+        plot_graph_solutions_noeuds(n,nb_noeuds,"p")
 
     return
 
-def compare_en_p():
+def compare_en_p(algos, p_step=10, n_fixe=100):
     """
-    Compare les temps d'exécution et les couvertures trouvées par deux algorithmes sur des graphes avec différentes probabilités.
+    Compare les temps d'exécution et les couvertures de sommets trouvées par différents algorithmes sur des graphes ayant différentes probabilités d'arêtes.
 
-    Cette fonction génère des graphes aléatoires de taille fixe (100) avec des probabilités variant de 0.1 à 1.0 par pas de 0.1. 
-    Pour chaque graphe, elle mesure le temps d'exécution et le nombre de sommets trouvés par `algo_couplage` et `algo_glouton`.
-    Ensuite, elle affiche deux graphiques: un montrant le temps d'exécution en fonction de la probabilité
-    et un autre montrant le nombre de sommets trouvés pour la couverture en fonction de la probabilité.
+    Cette fonction génère des graphes aléatoires de taille `n_fixe` avec des probabilités variant de 0.1 à 1.0 en utilisant un pas défini par `p_step`. 
+    Pour chaque graphe, elle évalue le temps d'exécution et le nombre de sommets couverts par chaque algorithme présent dans la liste `algos`.
+    Ensuite, elle produit deux graphiques : 
+        - Un montrant le temps d'exécution en fonction de la probabilité.
+        - Un autre illustrant le nombre de sommets de la couverture obtenue en fonction de la probabilité.
+
+    Paramètres:
+    - algos : Liste des algorithmes à évaluer.
+    - p_step : Nombre total d'étapes (ou intervalles) entre 0 et 1 pour définir la probabilité d'arête.
+    - n_fixe : Taille fixe du graphe pour chaque évaluation.
     """
-    temps_couplage,temps_glouton = [], []
-    solutions_couplage, solutions_glouton = [], []
+    temps = {algo.__name__: [] for algo in algos}
+    solutions = {algo.__name__: [] for algo in algos}
+    nb_noeuds = {algo.__name__: [] for algo in algos if algo.__name__ in _BRANCHEMENT}
 
-    p_n = [i/10 for i in range(1, 11)]
+    p_n = [round(i/p_step, 6) for i in range(0, int(np.ceil(p_step))+1)]
 
     for p in p_n:
-        tc_i, tg_i, sc_i, sg_i = [], [], [], []
+        algo_times = {algo.__name__: [] for algo in algos}
+        algo_solutions = {algo.__name__: [] for algo in algos}
+        noeud_i = {algo.__name__: [] for algo in algos if algo.__name__ in _BRANCHEMENT}
 
         for _ in range(10):
-            G_gen = generate_graphe(100, p)
+            G_gen = generate_graphe(n_fixe, p)
+            
+            for algo in algos:
+                t, s, noeuds= measure_algo_time_and_solution_and_noeuds(algo, G_gen)
+                algo_times[algo.__name__].append(t)
+                algo_solutions[algo.__name__].append(s)
+                if noeuds:
+                    noeud_i[algo.__name__].append(noeuds)
 
-            t, s = measure_algo_time_and_solution(algo_couplage, G_gen)
-            tc_i.append(t)
-            sc_i.append(s)
+        for algo in algos:
+            temps[algo.__name__].append(np.mean(algo_times[algo.__name__]))
+            solutions[algo.__name__].append(np.mean(algo_solutions[algo.__name__]))
+            if algo.__name__ in _BRANCHEMENT:
+                nb_noeuds[algo.__name__].append(np.mean(noeud_i[algo.__name__]))
 
-            t, s = measure_algo_time_and_solution(algo_glouton, G_gen)
-            tg_i.append(t)
-            sg_i.append(s)
-
-        temps_couplage.append(np.mean(tc_i))
-        temps_glouton.append(np.mean(tg_i))
-        solutions_couplage.append(np.mean(sc_i))
-        solutions_glouton.append(np.mean(sg_i))
-
-    plot_time_graph(p_n,temps_couplage,temps_glouton)
-    plot_solution_histogram(p_n,solutions_couplage,solutions_glouton)
+    plot_time_graph(p_n, temps, "p")
+    plot_solution_histogram(p_n, solutions, "p")
+    if nb_noeuds:
+        plot_graph_solutions_noeuds(p_n,nb_noeuds,"p")
 
     #écriture des solutions dans un fichier
     #write_file(s_couplage, "solutions_couplage.txt")
@@ -537,450 +603,3 @@ def compare_en_p():
 
     return
 
-def test_branchement_en_n():
-    solutions = []
-    temps = []
-    noeud = []
-
-    n = [i for i in range(10, 21, 2)]
-
-    for i in n:
-        t_i = []
-        s_i = []
-        n_i = []
-        
-        #print("\n------------------------------------------------------------\n")
-        #print("i =%d\n"%i)
-
-        for j in range(10):
-            G_gen = generate_graphe(i, 1/np.sqrt(20))
-
-            debut_couplage = time.time()
-            s, c_noeud = branchement(G_gen)
-            fin_couplage = time.time()
-
-            t = fin_couplage-debut_couplage
-            t_i.append(t)
-            s_i.append(len(s))
-            n_i.append(c_noeud)
-            #print("t = %f"%t)
-            #print("s =", s)
-
-        temps.append(np.mean(t_i))
-        solutions.append(np.mean(s_i))
-        noeud.append(np.mean(n_i))
-
-    # affichage t/n
-    plt.plot(n, temps)
-    plt.title("courbe de temps en fonction de n")
-    plt.xlabel("taille n")
-    plt.ylabel("temps en s")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_n.png')
-    plt.show()
-
-    # affichage noued crée/n
-    plt.plot(n, noeud)
-    plt.title("courbe de nombre de noeuds crées en fonction de n")
-    plt.xlabel("taille n")
-    plt.ylabel("nombre de noeuds créés")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_noeud_n.png')
-    plt.show()
-
-    #écriture des solutions dans un fichier
-    #write_file(s, "solutions_branchement.txt")
-
-    return
-
-def test_branchement_en_p():
-    solutions = []
-    temps = []
-    noeud = []
-
-    p_n = [i/np.sqrt(20) for i in range(1, int(np.ceil(np.sqrt(20))))]
-
-    for p in p_n:
-        t_i = []
-        s_i = []
-        n_i = []
-        
-        #print("\n------------------------------------------------------------\n")
-        #print("i =%d\n"%i)
-
-        for j in range(10):
-            G_gen = generate_graphe(20, p)
-
-            debut_couplage = time.time()
-            s, c_noeud = branchement(G_gen)
-            fin_couplage = time.time()
-
-            t = fin_couplage-debut_couplage
-            t_i.append(t)
-            s_i.append(len(s))
-            n_i.append(c_noeud)
-            #print("t = %f"%t)
-            #print("s =", s)
-
-        temps.append(np.mean(t_i))
-        solutions.append(np.mean(s_i))
-        noeud.append(np.mean(n_i))
-
-    # affichage t/n
-    plt.plot(p_n, temps)
-    plt.title("courbe de temps en fonction de p")
-    plt.xlabel("probabilité p")
-    plt.ylabel("temps en s")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_p.png')
-    plt.show()
-
-    # affichage t/n
-    plt.plot(p_n, noeud)
-    plt.title("courbe de nombre de noeud crée en fonction de p")
-    plt.xlabel("probabilité p")
-    plt.ylabel("nombre de noeuds créés")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_noeud_p.png')
-    plt.show()
-
-    #écriture des solutions dans un fichier
-    #write_file(s, "solutions_branchement.txt")
-
-    return
-
-def test_branchement_borne_en_n():
-    solutions = []
-    temps = []
-    noeud = []
-
-    n = [i for i in range(10, 21, 2)]
-
-    for i in n:
-        t_i = []
-        s_i = []
-        n_i = []
-        
-        #print("\n------------------------------------------------------------\n")
-        #print("i =%d\n"%i)
-
-        for j in range(10):
-            G_gen = generate_graphe(i, 1/np.sqrt(20))
-
-            debut_couplage = time.time()
-            s, c_noeud = branchement_borne(G_gen)
-            fin_couplage = time.time()
-
-            t = fin_couplage-debut_couplage
-            t_i.append(t)
-            s_i.append(len(s))
-            n_i.append(c_noeud)
-            #print("t = %f"%t)
-            #print("s =", s)
-
-        temps.append(np.mean(t_i))
-        solutions.append(np.mean(s_i))
-        noeud.append(np.mean(n_i))
-
-    # affichage t/n
-    plt.plot(n, temps)
-    plt.title("courbe de temps en fonction de n")
-    plt.xlabel("taille n")
-    plt.ylabel("temps en s")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_borne_n.png')
-    plt.show()
-
-    # affichage noued crée/n
-    plt.plot(n, noeud)
-    plt.title("courbe de nombre de noeuds crées en fonction de n")
-    plt.xlabel("taille n")
-    plt.ylabel("nombre de noeuds créés")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_borne_noeud_n.png')
-    plt.show()
-
-    #écriture des solutions dans un fichier
-    #write_file(s, "solutions_branchement.txt")
-
-    return
-
-def test_branchement_borne_en_p():
-    solutions = []
-    temps = []
-    noeud = []
-
-    p_n = [i/np.sqrt(20) for i in range(1, int(np.ceil(np.sqrt(20))))]
-
-    for p in p_n:
-        t_i = []
-        s_i = []
-        n_i = []
-        
-        #print("\n------------------------------------------------------------\n")
-        #print("i =%d\n"%i)
-
-        for j in range(10):
-            G_gen = generate_graphe(20, p)
-
-            debut_couplage = time.time()
-            s, c_noeud = branchement_borne(G_gen)
-            fin_couplage = time.time()
-
-            t = fin_couplage-debut_couplage
-            t_i.append(t)
-            s_i.append(len(s))
-            n_i.append(c_noeud)
-            #print("t = %f"%t)
-            #print("s =", s)
-
-        temps.append(np.mean(t_i))
-        solutions.append(np.mean(s_i))
-        noeud.append(np.mean(n_i))
-
-    # affichage t/n
-    plt.plot(p_n, temps)
-    plt.title("courbe de temps en fonction de p")
-    plt.xlabel("probabilité p")
-    plt.ylabel("temps en s")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_borne_p.png')
-    plt.show()
-
-    # affichage t/n
-    plt.plot(p_n, noeud)
-    plt.title("courbe de nombre de noeud crée en fonction de p")
-    plt.xlabel("probabilité p")
-    plt.ylabel("nombre de noeuds créés")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_borne_noeud_p.png')
-    plt.show()
-
-    #écriture des solutions dans un fichier
-    #write_file(s, "solutions_branchement.txt")
-
-    return
-
-def test_branchement_ameliore_q1_en_n():
-    solutions = []
-    temps = []
-    noeud = []
-
-    n = [i for i in range(10, 21, 2)]
-
-    for i in n:
-        t_i = []
-        s_i = []
-        n_i = []
-        
-        #print("\n------------------------------------------------------------\n")
-        #print("i =%d\n"%i)
-
-        for j in range(10):
-            G_gen = generate_graphe(i, 1/np.sqrt(20))
-
-            debut_couplage = time.time()
-            s, c_noeud = branchement_ameliore_q1(G_gen)
-            fin_couplage = time.time()
-
-            t = fin_couplage-debut_couplage
-            t_i.append(t)
-            s_i.append(len(s))
-            n_i.append(c_noeud)
-            #print("t = %f"%t)
-            #print("s =", s)
-
-        temps.append(np.mean(t_i))
-        solutions.append(np.mean(s_i))
-        noeud.append(np.mean(n_i))
-
-    # affichage t/n
-    plt.plot(n, temps)
-    plt.title("courbe de temps en fonction de n")
-    plt.xlabel("taille n")
-    plt.ylabel("temps en s")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_ameliore_q1_n.png')
-    plt.show()
-
-    # affichage noued crée/n
-    plt.plot(n, noeud)
-    plt.title("courbe de nombre de noeuds crées en fonction de n")
-    plt.xlabel("taille n")
-    plt.ylabel("nombre de noeuds créés")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_ameliore_q1_noeud_n.png')
-    plt.show()
-
-    #écriture des solutions dans un fichier
-    #write_file(s, "solutions_branchement.txt")
-
-    return
-
-def test_branchement_ameliore_q1_en_p():
-    solutions = []
-    temps = []
-    noeud = []
-
-    p_n = [i/np.sqrt(20) for i in range(1, int(np.ceil(np.sqrt(20))))]
-
-    for p in p_n:
-        t_i = []
-        s_i = []
-        n_i = []
-        
-        #print("\n------------------------------------------------------------\n")
-        #print("i =%d\n"%i)
-
-        for j in range(10):
-            G_gen = generate_graphe(20, p)
-
-            debut_couplage = time.time()
-            s, c_noeud = branchement_ameliore_q1(G_gen)
-            fin_couplage = time.time()
-
-            t = fin_couplage-debut_couplage
-            t_i.append(t)
-            s_i.append(len(s))
-            n_i.append(c_noeud)
-            #print("t = %f"%t)
-            #print("s =", s)
-
-        temps.append(np.mean(t_i))
-        solutions.append(np.mean(s_i))
-        noeud.append(np.mean(n_i))
-
-    # affichage t/n
-    plt.plot(p_n, temps)
-    plt.title("courbe de temps en fonction de p")
-    plt.xlabel("probabilité p")
-    plt.ylabel("temps en s")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_ameliore_q1_p.png')
-    plt.show()
-
-    # affichage t/n
-    plt.plot(p_n, noeud)
-    plt.title("courbe de nombre de noeud crée en fonction de p")
-    plt.xlabel("probabilité p")
-    plt.ylabel("nombre de noeuds créés")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_ameliore_q1_noeud_p.png')
-    plt.show()
-
-    #écriture des solutions dans un fichier
-    #write_file(s, "solutions_branchement.txt")
-
-    return
-
-def test_branchement_ameliore_q2_en_n():
-    solutions = []
-    temps = []
-    noeud = []
-
-    n = [i for i in range(10, 21, 2)]
-
-    for i in n:
-        t_i = []
-        s_i = []
-        n_i = []
-        
-        #print("\n------------------------------------------------------------\n")
-        #print("i =%d\n"%i)
-
-        for j in range(10):
-            G_gen = generate_graphe(i, 1/np.sqrt(20))
-
-            debut_couplage = time.time()
-            s, c_noeud = branchement_ameliore_q2(G_gen)
-            fin_couplage = time.time()
-
-            t = fin_couplage-debut_couplage
-            t_i.append(t)
-            s_i.append(len(s))
-            n_i.append(c_noeud)
-            #print("t = %f"%t)
-            #print("s =", s)
-
-        temps.append(np.mean(t_i))
-        solutions.append(np.mean(s_i))
-        noeud.append(np.mean(n_i))
-
-    # affichage t/n
-    plt.plot(n, temps)
-    plt.title("courbe de temps en fonction de n")
-    plt.xlabel("taille n")
-    plt.ylabel("temps en s")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_ameliore_q2_n.png')
-    plt.show()
-
-    # affichage noued crée/n
-    plt.plot(n, noeud)
-    plt.title("courbe de nombre de noeuds crées en fonction de n")
-    plt.xlabel("taille n")
-    plt.ylabel("nombre de noeuds créés")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_ameliore_q2_noeud_n.png')
-    plt.show()
-
-    #écriture des solutions dans un fichier
-    #write_file(s, "solutions_branchement.txt")
-
-    return
-
-def test_branchement_bameliore_q2_en_p():
-    solutions = []
-    temps = []
-    noeud = []
-
-    p_n = [i/np.sqrt(20) for i in range(1, int(np.ceil(np.sqrt(20))))]
-
-    for p in p_n:
-        t_i = []
-        s_i = []
-        n_i = []
-        
-        #print("\n------------------------------------------------------------\n")
-        #print("i =%d\n"%i)
-
-        for j in range(10):
-            G_gen = generate_graphe(20, p)
-
-            debut_couplage = time.time()
-            s, c_noeud = branchement_ameliore_q2(G_gen)
-            fin_couplage = time.time()
-
-            t = fin_couplage-debut_couplage
-            t_i.append(t)
-            s_i.append(len(s))
-            n_i.append(c_noeud)
-            #print("t = %f"%t)
-            #print("s =", s)
-
-        temps.append(np.mean(t_i))
-        solutions.append(np.mean(s_i))
-        noeud.append(np.mean(n_i))
-
-    # affichage t/n
-    plt.plot(p_n, temps)
-    plt.title("courbe de temps en fonction de p")
-    plt.xlabel("probabilité p")
-    plt.ylabel("temps en s")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_ameliore_q2_p.png')
-    plt.show()
-
-    # affichage t/n
-    plt.plot(p_n, noeud)
-    plt.title("courbe de nombre de noeud crée en fonction de p")
-    plt.xlabel("probabilité p")
-    plt.ylabel("nombre de noeuds créés")
-    plt.legend(["branchement"])
-    plt.savefig('courbe_branchement_ameliore_q2_noeud_p.png')
-    plt.show()
-
-    #écriture des solutions dans un fichier
-    #write_file(s, "solutions_branchement.txt")
-
-    return
