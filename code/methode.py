@@ -109,8 +109,9 @@ def sommet_degree_max(G):
     Returns:
     - int: Le sommet qui a le degré le plus élevé dans le graphe.
     """
-    degre_sommets = degre_sommets(G)
-    return G[0][np.argmax(degre_sommets)]
+    degres = degre_sommets(G)
+    max_index = np.argmax(degres)
+    return G[0][max_index]
 
 def generate_graphe(n, p):
     """
@@ -142,9 +143,6 @@ def generate_graphe(n, p):
                     adjacences[j].append(i)
     return (sommets, adjacences)
 
-
-
-
 ######## 3 - Méthodes approchées ########
 
 def getListArete(G):
@@ -169,10 +167,10 @@ def algo_couplage(G):
             C.add(v)
     return C
 
-def sommet_degree_max(G):
-    sommet, l_aretes = G
-    t_degre = [len(sublist) for sublist in l_aretes]
-    return sommet[np.argmax(t_degre)]
+# def sommet_degree_max(G):
+#     sommet, l_aretes = G
+#     t_degre = [len(sublist) for sublist in l_aretes]
+#     return sommet[np.argmax(t_degre)]
 
 def algo_glouton(G):
     sommet, arete = copy.deepcopy(G)
