@@ -233,9 +233,11 @@ def borne_inf(G_bis):
 def branchement(G):
     # Initialisation : borne supérieure = sommets du graphe initial
     best_cover = G[0]
+    compteur_noeud = 0
 
     # Initialisation de la pile
     pile = [(G, set())]
+    compteur_noeud += 1
     while pile:
         current_graph, current_cover = pile.pop()
         aretes = get_liste_aretes(current_graph)
@@ -250,15 +252,18 @@ def branchement(G):
             # Exploration des nœuds enfants
             pile.append((delete_sommet(current_graph, u),current_cover | {u}))
             pile.append((delete_sommet(current_graph, v),current_cover | {v}))
-    return best_cover
+            compteur_noeud += 2
+    return best_cover, compteur_noeud
 
 def branchement_borne(G):
     # Initialisation : borne supérieure = sommets du graphe initial
     best_cover = G[0]
     b_sup = len(best_cover)
+    compteur_noeud = 0
 
     # Initialisation de la pile
     pile = [(G, set())]
+    compteur_noeud += 1
     while pile:
         current_graph, current_cover = pile.pop()
         aretes = get_liste_aretes(current_graph)
@@ -282,15 +287,18 @@ def branchement_borne(G):
             # Exploration des nœuds enfants
             pile.append((delete_sommet(current_graph, u),current_cover | {u}))
             pile.append((delete_sommet(current_graph, v),current_cover | {v}))
-    return best_cover
+            compteur_noeud += 2
+    return best_cover, compteur_noeud
 
 def branchement_ameliore_q1(G):
     # Initialisation : borne supérieure = sommets du graphe initial
     best_cover = G[0]
     b_sup = len(best_cover)
+    compteur_noeud = 0
 
     # Initialisation de la pile
     pile = [(G, set())]
+    compteur_noeud += 1
     while pile:
         print("pile =", pile)
         print("best_cover =", best_cover)
@@ -322,15 +330,18 @@ def branchement_ameliore_q1(G):
             print("voisin_u =", voisin_u)
             pile.append((delete_sommet(current_graph, u),current_cover | {u}))
             pile.append((delete_ens_sommet(current_graph, voisin_u),current_cover | voisin_u))
-    return best_cover
+            compteur_noeud += 2
+    return best_cover, compteur_noeud
 
 def branchement_ameliore_q2(G):
     # Initialisation : borne supérieure = sommets du graphe initial
     best_cover = G[0]
     b_sup = len(best_cover)
+    compteur_noeud = 0
 
     # Initialisation de la pile
     pile = [(G, set())]
+    compteur_noeud += 1
     while pile:
         print("pile =", pile)
         print("best_cover =", best_cover)
@@ -365,7 +376,8 @@ def branchement_ameliore_q2(G):
             print("voisin_u =", voisin_u)
             pile.append((delete_sommet(current_graph, u),current_cover | {u}))
             pile.append((delete_ens_sommet(current_graph, voisin_u),current_cover | voisin_u))
-    return best_cover
+            compteur_noeud += 2
+    return best_cover, compteur_noeud
 
 def write_file(t, fichier):
     f = open(fichier, "w")
@@ -525,13 +537,450 @@ def compare_en_p():
 
     return
 
-G = read_file("../instance/exemple_instance.txt")
-# print(G)
-#G = ([0, 1, 2, 3], [[1], [0, 2, 3], [1], [1]])
-#print("Q1 :")
-#C = branchement_ameliore_q1(G)
-#print(C)
+def test_branchement_en_n():
+    solutions = []
+    temps = []
+    noeud = []
 
-#print("\n-------------------------------------------------\nQ2 :")
-#C2 = branchement_ameliore_q2(G)
-#print(C2)
+    n = [i for i in range(10, 21, 2)]
+
+    for i in n:
+        t_i = []
+        s_i = []
+        n_i = []
+        
+        #print("\n------------------------------------------------------------\n")
+        #print("i =%d\n"%i)
+
+        for j in range(10):
+            G_gen = generate_graphe(i, 1/np.sqrt(20))
+
+            debut_couplage = time.time()
+            s, c_noeud = branchement(G_gen)
+            fin_couplage = time.time()
+
+            t = fin_couplage-debut_couplage
+            t_i.append(t)
+            s_i.append(len(s))
+            n_i.append(c_noeud)
+            #print("t = %f"%t)
+            #print("s =", s)
+
+        temps.append(np.mean(t_i))
+        solutions.append(np.mean(s_i))
+        noeud.append(np.mean(n_i))
+
+    # affichage t/n
+    plt.plot(n, temps)
+    plt.title("courbe de temps en fonction de n")
+    plt.xlabel("taille n")
+    plt.ylabel("temps en s")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_n.png')
+    plt.show()
+
+    # affichage noued crée/n
+    plt.plot(n, noeud)
+    plt.title("courbe de nombre de noeuds crées en fonction de n")
+    plt.xlabel("taille n")
+    plt.ylabel("nombre de noeuds créés")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_noeud_n.png')
+    plt.show()
+
+    #écriture des solutions dans un fichier
+    #write_file(s, "solutions_branchement.txt")
+
+    return
+
+def test_branchement_en_p():
+    solutions = []
+    temps = []
+    noeud = []
+
+    p_n = [i/np.sqrt(20) for i in range(1, int(np.ceil(np.sqrt(20))))]
+
+    for p in p_n:
+        t_i = []
+        s_i = []
+        n_i = []
+        
+        #print("\n------------------------------------------------------------\n")
+        #print("i =%d\n"%i)
+
+        for j in range(10):
+            G_gen = generate_graphe(20, p)
+
+            debut_couplage = time.time()
+            s, c_noeud = branchement(G_gen)
+            fin_couplage = time.time()
+
+            t = fin_couplage-debut_couplage
+            t_i.append(t)
+            s_i.append(len(s))
+            n_i.append(c_noeud)
+            #print("t = %f"%t)
+            #print("s =", s)
+
+        temps.append(np.mean(t_i))
+        solutions.append(np.mean(s_i))
+        noeud.append(np.mean(n_i))
+
+    # affichage t/n
+    plt.plot(p_n, temps)
+    plt.title("courbe de temps en fonction de p")
+    plt.xlabel("probabilité p")
+    plt.ylabel("temps en s")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_p.png')
+    plt.show()
+
+    # affichage t/n
+    plt.plot(p_n, noeud)
+    plt.title("courbe de nombre de noeud crée en fonction de p")
+    plt.xlabel("probabilité p")
+    plt.ylabel("nombre de noeuds créés")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_noeud_p.png')
+    plt.show()
+
+    #écriture des solutions dans un fichier
+    #write_file(s, "solutions_branchement.txt")
+
+    return
+
+def test_branchement_borne_en_n():
+    solutions = []
+    temps = []
+    noeud = []
+
+    n = [i for i in range(10, 21, 2)]
+
+    for i in n:
+        t_i = []
+        s_i = []
+        n_i = []
+        
+        #print("\n------------------------------------------------------------\n")
+        #print("i =%d\n"%i)
+
+        for j in range(10):
+            G_gen = generate_graphe(i, 1/np.sqrt(20))
+
+            debut_couplage = time.time()
+            s, c_noeud = branchement_borne(G_gen)
+            fin_couplage = time.time()
+
+            t = fin_couplage-debut_couplage
+            t_i.append(t)
+            s_i.append(len(s))
+            n_i.append(c_noeud)
+            #print("t = %f"%t)
+            #print("s =", s)
+
+        temps.append(np.mean(t_i))
+        solutions.append(np.mean(s_i))
+        noeud.append(np.mean(n_i))
+
+    # affichage t/n
+    plt.plot(n, temps)
+    plt.title("courbe de temps en fonction de n")
+    plt.xlabel("taille n")
+    plt.ylabel("temps en s")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_borne_n.png')
+    plt.show()
+
+    # affichage noued crée/n
+    plt.plot(n, noeud)
+    plt.title("courbe de nombre de noeuds crées en fonction de n")
+    plt.xlabel("taille n")
+    plt.ylabel("nombre de noeuds créés")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_borne_noeud_n.png')
+    plt.show()
+
+    #écriture des solutions dans un fichier
+    #write_file(s, "solutions_branchement.txt")
+
+    return
+
+def test_branchement_borne_en_p():
+    solutions = []
+    temps = []
+    noeud = []
+
+    p_n = [i/np.sqrt(20) for i in range(1, int(np.ceil(np.sqrt(20))))]
+
+    for p in p_n:
+        t_i = []
+        s_i = []
+        n_i = []
+        
+        #print("\n------------------------------------------------------------\n")
+        #print("i =%d\n"%i)
+
+        for j in range(10):
+            G_gen = generate_graphe(20, p)
+
+            debut_couplage = time.time()
+            s, c_noeud = branchement_borne(G_gen)
+            fin_couplage = time.time()
+
+            t = fin_couplage-debut_couplage
+            t_i.append(t)
+            s_i.append(len(s))
+            n_i.append(c_noeud)
+            #print("t = %f"%t)
+            #print("s =", s)
+
+        temps.append(np.mean(t_i))
+        solutions.append(np.mean(s_i))
+        noeud.append(np.mean(n_i))
+
+    # affichage t/n
+    plt.plot(p_n, temps)
+    plt.title("courbe de temps en fonction de p")
+    plt.xlabel("probabilité p")
+    plt.ylabel("temps en s")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_borne_p.png')
+    plt.show()
+
+    # affichage t/n
+    plt.plot(p_n, noeud)
+    plt.title("courbe de nombre de noeud crée en fonction de p")
+    plt.xlabel("probabilité p")
+    plt.ylabel("nombre de noeuds créés")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_borne_noeud_p.png')
+    plt.show()
+
+    #écriture des solutions dans un fichier
+    #write_file(s, "solutions_branchement.txt")
+
+    return
+
+def test_branchement_ameliore_q1_en_n():
+    solutions = []
+    temps = []
+    noeud = []
+
+    n = [i for i in range(10, 21, 2)]
+
+    for i in n:
+        t_i = []
+        s_i = []
+        n_i = []
+        
+        #print("\n------------------------------------------------------------\n")
+        #print("i =%d\n"%i)
+
+        for j in range(10):
+            G_gen = generate_graphe(i, 1/np.sqrt(20))
+
+            debut_couplage = time.time()
+            s, c_noeud = branchement_ameliore_q1(G_gen)
+            fin_couplage = time.time()
+
+            t = fin_couplage-debut_couplage
+            t_i.append(t)
+            s_i.append(len(s))
+            n_i.append(c_noeud)
+            #print("t = %f"%t)
+            #print("s =", s)
+
+        temps.append(np.mean(t_i))
+        solutions.append(np.mean(s_i))
+        noeud.append(np.mean(n_i))
+
+    # affichage t/n
+    plt.plot(n, temps)
+    plt.title("courbe de temps en fonction de n")
+    plt.xlabel("taille n")
+    plt.ylabel("temps en s")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_ameliore_q1_n.png')
+    plt.show()
+
+    # affichage noued crée/n
+    plt.plot(n, noeud)
+    plt.title("courbe de nombre de noeuds crées en fonction de n")
+    plt.xlabel("taille n")
+    plt.ylabel("nombre de noeuds créés")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_ameliore_q1_noeud_n.png')
+    plt.show()
+
+    #écriture des solutions dans un fichier
+    #write_file(s, "solutions_branchement.txt")
+
+    return
+
+def test_branchement_ameliore_q1_en_p():
+    solutions = []
+    temps = []
+    noeud = []
+
+    p_n = [i/np.sqrt(20) for i in range(1, int(np.ceil(np.sqrt(20))))]
+
+    for p in p_n:
+        t_i = []
+        s_i = []
+        n_i = []
+        
+        #print("\n------------------------------------------------------------\n")
+        #print("i =%d\n"%i)
+
+        for j in range(10):
+            G_gen = generate_graphe(20, p)
+
+            debut_couplage = time.time()
+            s, c_noeud = branchement_ameliore_q1(G_gen)
+            fin_couplage = time.time()
+
+            t = fin_couplage-debut_couplage
+            t_i.append(t)
+            s_i.append(len(s))
+            n_i.append(c_noeud)
+            #print("t = %f"%t)
+            #print("s =", s)
+
+        temps.append(np.mean(t_i))
+        solutions.append(np.mean(s_i))
+        noeud.append(np.mean(n_i))
+
+    # affichage t/n
+    plt.plot(p_n, temps)
+    plt.title("courbe de temps en fonction de p")
+    plt.xlabel("probabilité p")
+    plt.ylabel("temps en s")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_ameliore_q1_p.png')
+    plt.show()
+
+    # affichage t/n
+    plt.plot(p_n, noeud)
+    plt.title("courbe de nombre de noeud crée en fonction de p")
+    plt.xlabel("probabilité p")
+    plt.ylabel("nombre de noeuds créés")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_ameliore_q1_noeud_p.png')
+    plt.show()
+
+    #écriture des solutions dans un fichier
+    #write_file(s, "solutions_branchement.txt")
+
+    return
+
+def test_branchement_ameliore_q2_en_n():
+    solutions = []
+    temps = []
+    noeud = []
+
+    n = [i for i in range(10, 21, 2)]
+
+    for i in n:
+        t_i = []
+        s_i = []
+        n_i = []
+        
+        #print("\n------------------------------------------------------------\n")
+        #print("i =%d\n"%i)
+
+        for j in range(10):
+            G_gen = generate_graphe(i, 1/np.sqrt(20))
+
+            debut_couplage = time.time()
+            s, c_noeud = branchement_ameliore_q2(G_gen)
+            fin_couplage = time.time()
+
+            t = fin_couplage-debut_couplage
+            t_i.append(t)
+            s_i.append(len(s))
+            n_i.append(c_noeud)
+            #print("t = %f"%t)
+            #print("s =", s)
+
+        temps.append(np.mean(t_i))
+        solutions.append(np.mean(s_i))
+        noeud.append(np.mean(n_i))
+
+    # affichage t/n
+    plt.plot(n, temps)
+    plt.title("courbe de temps en fonction de n")
+    plt.xlabel("taille n")
+    plt.ylabel("temps en s")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_ameliore_q2_n.png')
+    plt.show()
+
+    # affichage noued crée/n
+    plt.plot(n, noeud)
+    plt.title("courbe de nombre de noeuds crées en fonction de n")
+    plt.xlabel("taille n")
+    plt.ylabel("nombre de noeuds créés")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_ameliore_q2_noeud_n.png')
+    plt.show()
+
+    #écriture des solutions dans un fichier
+    #write_file(s, "solutions_branchement.txt")
+
+    return
+
+def test_branchement_bameliore_q2_en_p():
+    solutions = []
+    temps = []
+    noeud = []
+
+    p_n = [i/np.sqrt(20) for i in range(1, int(np.ceil(np.sqrt(20))))]
+
+    for p in p_n:
+        t_i = []
+        s_i = []
+        n_i = []
+        
+        #print("\n------------------------------------------------------------\n")
+        #print("i =%d\n"%i)
+
+        for j in range(10):
+            G_gen = generate_graphe(20, p)
+
+            debut_couplage = time.time()
+            s, c_noeud = branchement_ameliore_q2(G_gen)
+            fin_couplage = time.time()
+
+            t = fin_couplage-debut_couplage
+            t_i.append(t)
+            s_i.append(len(s))
+            n_i.append(c_noeud)
+            #print("t = %f"%t)
+            #print("s =", s)
+
+        temps.append(np.mean(t_i))
+        solutions.append(np.mean(s_i))
+        noeud.append(np.mean(n_i))
+
+    # affichage t/n
+    plt.plot(p_n, temps)
+    plt.title("courbe de temps en fonction de p")
+    plt.xlabel("probabilité p")
+    plt.ylabel("temps en s")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_ameliore_q2_p.png')
+    plt.show()
+
+    # affichage t/n
+    plt.plot(p_n, noeud)
+    plt.title("courbe de nombre de noeud crée en fonction de p")
+    plt.xlabel("probabilité p")
+    plt.ylabel("nombre de noeuds créés")
+    plt.legend(["branchement"])
+    plt.savefig('courbe_branchement_ameliore_q2_noeud_p.png')
+    plt.show()
+
+    #écriture des solutions dans un fichier
+    #write_file(s, "solutions_branchement.txt")
+
+    return
