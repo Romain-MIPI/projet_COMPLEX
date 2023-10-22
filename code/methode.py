@@ -4,71 +4,177 @@ import sys
 import time
 import matplotlib.pyplot as plt
 import numpy as np
+from copy import deepcopy
 sys.path.append("../..")
 
-def read_file(fichier):
+def read_file(chemin_fichier):
     """
-    str -> G(S, A)
-    construit un graphe depuis un fichier
-    """
-    f = open("../instance/"+fichier, "r")
-
-    # lecture sommets
-    S = []
-    f.readline()
-    nb_sommet = int(f.readline().replace("\n", ""))
-    f.readline()
-    for i in range(nb_sommet):
-        S.append(int(f.readline().replace("\n", "")))
-
-    # lecture arêtes
-    A = [[] for i in range(nb_sommet)]
-    f.readline()
-    nb_arete = int(f.readline().replace("\n", ""))
-    f.readline()
-    for i in range(nb_arete):
-        u, v = f.readline().replace("\n", "").split(" ")
-        A[S.index(int(u))].append(int(v))
-        A[S.index(int(v))].append(int(u))
+    Lit un fichier pour construire et retourner un graphe sous forme de liste d'adjacence.
     
-    for l in A:
-        l.sort()
+    Parameters:
+    - chemin_fichier (str) : Le chemin vers le fichier contenant la représentation du graphe.
 
-    f.close()
+    Returns:
+    tuple: Un tuple (sommet, adjacences) où 'sommet' est une liste des sommets et 'adjacences' est la liste d'adjacence du graphe.
+    
+    Exemple:
+    >>> generate_graphe("../instance/exemple_instance.txt")
+    ([0, 1, 2, 3, 4], [[1, 2], [0, 2, 3], [0, 1, 4], [1], [2]])
+    """
+    
+    with open(chemin_fichier, "r") as fichier:
+        
+        # Lecture des sommets
+        sommets = []
+        fichier.readline()
+        nombre_sommets = int(fichier.readline().strip())
+        fichier.readline()
+        for _ in range(nombre_sommets):
+            sommets.append(int(fichier.readline().strip()))
 
-    return (S, A)
+        # Lecture des arêtes
+        adjacences = [[] for _ in range(nombre_sommets)]
+        fichier.readline()
+        nombre_aretes = int(fichier.readline().strip())
+        fichier.readline()
+        for _ in range(nombre_aretes):
+            u, v = map(int, fichier.readline().strip().split())
+            adjacences[sommets.index(u)].append(v)
+            adjacences[sommets.index(v)].append(u)
+        
+        for liste in adjacences:
+            liste.sort()
 
-# 2 - Graphes
+    return (sommets, adjacences)
+
+# def read_file(fichier):
+#     """
+#     str -> G(S, A)
+#     construit un graphe depuis un fichier
+#     """
+#     f = open("../instance/"+fichier, "r")
+
+#     # lecture sommets
+#     S = []
+#     f.readline()
+#     nb_sommet = int(f.readline().replace("\n", ""))
+#     f.readline()
+#     for i in range(nb_sommet):
+#         S.append(int(f.readline().replace("\n", "")))
+
+#     # lecture arêtes
+#     A = [[] for i in range(nb_sommet)]
+#     f.readline()
+#     nb_arete = int(f.readline().replace("\n", ""))
+#     f.readline()
+#     for i in range(nb_arete):
+#         u, v = f.readline().replace("\n", "").split(" ")
+#         A[S.index(int(u))].append(int(v))
+#         A[S.index(int(v))].append(int(u))
+
+#     for l in A:
+#         l.sort()
+
+#     return (S, A)
+######## 2 - Graphes ########
 
 def delete_sommet(G, v):
-    sommet, arete = list(G[0]), [list(l) for l in G[1]] 
+    """
+    Supprime un sommet et toutes ses adjacences d'un graphe.(exo: 2.1.1)
 
-    for l in arete:
+    Parameters:
+    - G (tuple): Le graphe représenté par un tuple (sommet, adjacences).
+    - v (int): Le sommet à supprimer.
+
+    Returns:
+    - tuple: Le nouveau graphe sans le sommet v et ses adjacences.
+    """
+    sommets, adjacences = deepcopy(G[0]), deepcopy(G[1])
+    index_sommets_a_supprimer = [sommets.index(v)]
+    for i,l in enumerate(adjacences):
         if v in l:
             l.remove(v)
-
-    arete.pop(sommet.index(v))
-    sommet.remove(v)
-    return (sommet, arete)
+        if not l:
+            index_sommets_a_supprimer.append(i)
+    for sommet_index in sorted(index_sommets_a_supprimer,reverse=True):
+        adjacences.pop(sommet_index)
+        sommets.pop(sommet_index)
+    return (sommets, adjacences)
 
 def delete_ens_sommet(G, V):
+    """
+    Supprime un ensemble de sommets et toutes leurs adjacences d'un graphe.(exo: 2.1.2)
+
+    Parameters:
+    - G (tuple): Le graphe représenté par un tuple (sommet, adjacences).
+    - v (int): L'ensemble de sommets à supprimer.
+
+    Returns:
+    - tuple: Le nouveau graphe sans le sommet v et ses adjacences.
+    """
     for v in V:
         G = delete_sommet(G, v)
     return G
 
+def degre_sommets(G):
+    """
+    Calcule le degré de chaque sommet dans un graphe.(exo: 2.1.3)
+
+    Parameters:
+    - G (tuple): Le graphe représenté par un tuple (sommet, adjacences).
+
+    Returns:
+    - list[int]: Une liste des degrés pour chaque sommet du graphe.
+    """
+    return [len(i) for i in G[1]]
+
+def sommet_degree_max(G):
+    """
+    Trouve le sommet avec le degré maximum dans un graphe.(exo: 2.1.3)
+
+    Parameters:
+    - G (tuple): Le graphe représenté par un tuple (sommet, adjacences).
+
+    Returns:
+    - int: Le sommet qui a le degré le plus élevé dans le graphe.
+    """
+    degre_sommets = degre_sommets(G)
+    return G[0][np.argmax(degre_sommets)]
+
 def generate_graphe(n, p):
+    """
+    Génère un graphe aléatoire sur n sommets.(exo: 2.2)
+
+    Chaque arête (i, j) est présente avec une probabilité p. Les tirages sont 
+    indépendants pour les différentes arêtes.
+
+    Paramètres:
+    - n (int): Nombre de sommets du graphe.
+    - p (float): Probabilité de présence d'une arête entre deux sommets.
+
+    Retour:
+    - tuple: Un tuple contenant deux listes. La première liste représente les sommets
+             et la deuxième liste représente les arêtes sous forme de listes adjacentes.
+
+    Exemple:
+    >>> generate_graphe(5, 0.5)
+    ([0, 1, 2, 3, 4], [[1, 2], [0, 2, 3], [0, 1, 4], [1], [2]])
+    """
     sommet = [i for i in range(n)]
-    arete = [[] for i in range(n)]
+    liste_adjacence = [[] for i in range(n)]
     for i in range(n):
         for j in range(n):
             if j > i:
                 succes = np.random.rand()
                 if succes > 1-p:
-                    arete[i].append(j)
-                    arete[j].append(i)
-    return (sommet, arete)
+                    liste_adjacence[i].append(j)
+                    liste_adjacence[j].append(i)
+    return (sommet, liste_adjacence)
 
-# 3 - Méthodes approchées
+
+
+
+######## 3 - Méthodes approchées ########
 
 def getListArete(G):
     """
@@ -446,7 +552,8 @@ def compare_en_p():
 
     return
 
-#G = read_file("../instance/exemple_instance.txt")
+G = read_file("../instance/exemple_instance.txt")
+print(G)
 #G = ([0, 1, 2, 3], [[1], [0, 2, 3], [1], [1]])
 #print("Q1 :")
 #C = branchement_ameliore_q1(G)
