@@ -24,3 +24,12 @@ G_generated = generate_graphe(5,0.5)
 print(f"{G_generated=}")
 
 # 3. Méthodes approchées
+print(f"Pour les tests suivant, on utilise toujours le graphe G de l'exemple: \n {G=}")
+liste_aretes = get_liste_aretes(G) # Test de méthode auxiliaire
+print(f"{liste_aretes=}")
+
+couverture_couplage = algo_couplage(G)
+print(f"{couverture_couplage=}")
+
+couverture_glouton = algo_glouton(G)
+print(f"{couverture_glouton=}")

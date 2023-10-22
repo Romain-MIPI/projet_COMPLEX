@@ -145,40 +145,64 @@ def generate_graphe(n, p):
 
 ######## 3 - Méthodes approchées ########
 
-def getListArete(G):
+def get_liste_aretes(G):
     """
-    retourne la liste des arêtes d'un graphe
+    Retourne la liste des arêtes d'un graphe afin de faciliter l'implementation des algorithmes a la suite.
+    
+    Parameters:
+    - G (tuple): Le graphe, représenté par un tuple (sommet, adjacences).
+    
+    Returns:
+    - list[tuple]: Une liste des arêtes du graphe sous la forme de paires (u, v), où u et v sont des sommets.
+
+    Exemple:
+    >>> obtenir_liste_aretes(([0, 1, 2], [[1, 2], [0, 2], [0, 1]]))
+    [(0, 1), (0, 2), (1, 2)]
     """
-    A = []
-    sommet, adj = G
-    for i in range(len(sommet)):
-        for v in adj[i]:
-            if (((sommet[i], v) not in A) and ((v, sommet[i]) not in A)):
-                A.append((sommet[i], v))
-    return A
+    aretes = []
+    sommets, adjacences = G
+    for u in sommets:
+        for v in adjacences[sommets.index(u)]:
+            if (u, v) not in aretes and (v, u) not in aretes:
+                aretes.append((u, v))
+    return aretes
 
 def algo_couplage(G):
+    """
+    Calcule une couverture a l'aide de l'algorithme de couplage.
+
+    Parameters:
+    - G (tuple): Le graphe, représenté par un tuple (sommet, adjacences).
+
+    Returns:
+    - set[int]: Un ensemble de sommets qui forment la couverture.
+    """
     C = set()
-    l_arete = getListArete(G)
-    for i in range(len(l_arete)):
-        u, v = l_arete[i]
-        if ((u not in C) and (v not in C)):
+    aretes = get_liste_aretes(G)
+    for u,v in aretes:
+        if u not in C and v not in C:
             C.add(u)
             C.add(v)
     return C
 
-# def sommet_degree_max(G):
-#     sommet, l_aretes = G
-#     t_degre = [len(sublist) for sublist in l_aretes]
-#     return sommet[np.argmax(t_degre)]
-
 def algo_glouton(G):
-    sommet, arete = copy.deepcopy(G)
+    """
+    Calcule une couverture a l'aide de l'algorithme glouton.
+
+    Parameters:
+    - G (tuple): Le graphe, représenté par un tuple (sommet, adjacences).
+
+    Returns:
+    - set[int]: Un ensemble de sommets qui forment la couverture.
+    """
+    sommets, adjacences = G
     C = set()
-    while(sum([len(arete[i]) for i in range(len(arete))]) != 0):
-        v = sommet_degree_max((sommet, arete))
+
+    while any(adjacences):
+        v = sommet_degree_max((sommets, adjacences))
         C.add(v)
-        sommet, arete = delete_sommet((sommet, arete), v)
+        sommets, adjacences = delete_sommet((sommets, adjacences), v)
+
     return C
 
 def compare_algo(t_c, t_g):
@@ -197,7 +221,7 @@ def degre_max_sommet(G):
 def borne_inf(G_bis):
     """Calcule des valeurs de b1, b2 et b3 afin d'obtenir une borne inf pour le branchement."""
     sommets = G_bis[0]
-    aretes = getListArete(G_bis)
+    aretes = get_liste_aretes(G_bis)
     n = len(sommets)
     m = len(aretes)
     couplage = algo_couplage(G_bis)
@@ -215,7 +239,7 @@ def branchement(G):
     pile = [(G, set())]
     while pile:
         current_graph, current_cover = pile.pop()
-        aretes = getListArete(current_graph)
+        aretes = get_liste_aretes(current_graph)
 
         # Élagage si toutes les arêtes sont couvertes
         if len(aretes)==0:
@@ -238,7 +262,7 @@ def branchement_borne(G):
     pile = [(G, set())]
     while pile:
         current_graph, current_cover = pile.pop()
-        aretes = getListArete(current_graph)
+        aretes = get_liste_aretes(current_graph)
 
         # Élagage si toutes les arêtes sont couvertes
         if len(aretes)==0:
@@ -272,7 +296,7 @@ def branchement_ameliore_q1(G):
         print("pile =", pile)
         print("best_cover =", best_cover)
         current_graph, current_cover = pile.pop()
-        aretes = getListArete(current_graph)
+        aretes = get_liste_aretes(current_graph)
 
         # Élagage si toutes les arêtes sont couvertes
         if len(aretes)==0:
@@ -312,7 +336,7 @@ def branchement_ameliore_q2(G):
         print("pile =", pile)
         print("best_cover =", best_cover)
         current_graph, current_cover = pile.pop()
-        aretes = getListArete(current_graph)
+        aretes = get_liste_aretes(current_graph)
 
         # Élagage si toutes les arêtes sont couvertes
         if len(aretes)==0:
