@@ -47,35 +47,6 @@ def read_file(chemin_fichier):
 
     return (sommets, adjacences)
 
-# def read_file(fichier):
-#     """
-#     str -> G(S, A)
-#     construit un graphe depuis un fichier
-#     """
-#     f = open("../instance/"+fichier, "r")
-
-#     # lecture sommets
-#     S = []
-#     f.readline()
-#     nb_sommet = int(f.readline().replace("\n", ""))
-#     f.readline()
-#     for i in range(nb_sommet):
-#         S.append(int(f.readline().replace("\n", "")))
-
-#     # lecture arêtes
-#     A = [[] for i in range(nb_sommet)]
-#     f.readline()
-#     nb_arete = int(f.readline().replace("\n", ""))
-#     f.readline()
-#     for i in range(nb_arete):
-#         u, v = f.readline().replace("\n", "").split(" ")
-#         A[S.index(int(u))].append(int(v))
-#         A[S.index(int(v))].append(int(u))
-
-#     for l in A:
-#         l.sort()
-
-#     return (S, A)
 ######## 2 - Graphes ########
 
 def delete_sommet(G, v):
@@ -160,16 +131,16 @@ def generate_graphe(n, p):
     >>> generate_graphe(5, 0.5)
     ([0, 1, 2, 3, 4], [[1, 2], [0, 2, 3], [0, 1, 4], [1], [2]])
     """
-    sommet = [i for i in range(n)]
-    liste_adjacence = [[] for i in range(n)]
+    sommets = [i for i in range(n)]
+    adjacences = [[] for i in range(n)]
     for i in range(n):
         for j in range(n):
             if j > i:
                 succes = np.random.rand()
                 if succes > 1-p:
-                    liste_adjacence[i].append(j)
-                    liste_adjacence[j].append(i)
-    return (sommet, liste_adjacence)
+                    adjacences[i].append(j)
+                    adjacences[j].append(i)
+    return (sommets, adjacences)
 
 
 
