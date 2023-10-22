@@ -59,17 +59,16 @@ def delete_sommet(G, v):
 
     Returns:
     - tuple: Le nouveau graphe sans le sommet v et ses adjacences.
+             On accepte de solution retournée avec des sommets sans arete,
+             i.e. [0, 3, 4], [[3], [0], []] avec 4 un sommet sans arete.
     """
-    sommets, adjacences = deepcopy(G[0]), deepcopy(G[1])
-    index_sommets_a_supprimer = [sommets.index(v)]
-    for i,l in enumerate(adjacences):
+    sommets, adjacences = list(G[0]), [list(l) for l in G[1]] 
+    for l in adjacences:
         if v in l:
             l.remove(v)
-        if not l:
-            index_sommets_a_supprimer.append(i)
-    for sommet_index in sorted(index_sommets_a_supprimer,reverse=True):
-        adjacences.pop(sommet_index)
-        sommets.pop(sommet_index)
+
+    adjacences.pop(sommets.index(v))
+    sommets.remove(v)
     return (sommets, adjacences)
 
 def delete_ens_sommet(G, V):
@@ -169,7 +168,7 @@ def get_liste_aretes(G):
 
 def algo_couplage(G):
     """
-    Calcule une couverture a l'aide de l'algorithme de couplage.
+    Calcule une couverture a l'aide de l'algorithme de couplage.(exo: 3.2)
 
     Parameters:
     - G (tuple): Le graphe, représenté par un tuple (sommet, adjacences).
@@ -187,7 +186,7 @@ def algo_couplage(G):
 
 def algo_glouton(G):
     """
-    Calcule une couverture a l'aide de l'algorithme glouton.
+    Calcule une couverture a l'aide de l'algorithme glouton.(exo: 3.2)
 
     Parameters:
     - G (tuple): Le graphe, représenté par un tuple (sommet, adjacences).
@@ -377,73 +376,59 @@ def write_file(t, fichier):
         f.write(" }\n")
     f.close()
 
-def compare_en_n():
-    t_couplage = []
-    s_couplage = []
-    t_glouton = []
-    s_glouton = []
+######### Methodes pour la comparaison de l'algorithme couplage et glouton
 
-    n = [i for i in range(10, 101, 10)]
+def measure_algo_time_and_solution(algo, G_gen):
+    """
+    Mesure le temps d'exécution d'un algorithme et la taille de la solution obtenue.
+    Fonction auxiliaire pour les méthodes "compare_en_n" et compare_en_p".
 
-    for i in n:
-        tc_i = []
-        tg_i = []
-        sc_i = []
-        sg_i = []
-        
-        #print("\n------------------------------------------------------------\n")
-        #print("i =%d\n"%i)
+    Paramètres:
+    - algo: Une fonction représentant l'algorithme à évaluer.
+    - G_gen: Le graphe sur lequel l'algorithme doit être exécuté.
 
-        for j in range(10):
-            G_gen = generate_graphe(i, 0.5)
+    Retourne:
+    - Le temps d'exécution de l'algorithme (en secondes).
+    - La taille de la solution produite par l'algorithme.
+    """
+    start_time = time.time()
+    solution = algo(G_gen)
+    end_time = time.time()
+    return end_time - start_time, len(solution)
 
-            #print("algo_couplage:")
-
-            debut_couplage = time.time()
-            s = algo_couplage(G_gen)
-            fin_couplage = time.time()
-
-            t = fin_couplage-debut_couplage
-            tc_i.append(t)
-            sc_i.append(len(s))
-            #print("t = %f"%t)
-            #print("s =", s)
-
-            #print("\nalgo glouton:")
-
-            debut_glouton = time.time()
-            s = algo_glouton(G_gen)
-            fin_glouton = time.time()
-
-            t = fin_glouton-debut_glouton
-            tg_i.append(t)
-            sg_i.append(len(s))
-            #print("t = %f"%t)
-            #print("s =", s)
-
-        t_couplage.append(np.mean(tc_i))
-        t_glouton.append(np.mean(tg_i))
-        s_couplage.append(np.mean(sc_i))
-        s_glouton.append(np.mean(sg_i))
-
-    # affichage t/n
-    plt.plot(n, t_couplage)
-    plt.plot(n, t_glouton)
+def plot_time_graph(n, temps_couplage, temps_glouton):
+    """
+    Affiche deux courbe représentant le temps d'exécution des deux algorithmes en fonction de la taille n.
+    Fonction auxiliaire pour les méthodes "compare_en_n" et compare_en_p".
+    
+    Paramètres:
+    - n: Une liste indiquant le nombre de sommets des graphes.
+    - temps_couplage: Une liste représentant le temps d'exécution de l'algo_couplage pour chaque taille dans n.
+    - temps_glouton: Une liste représentant le temps d'exécution de l'algo_glouton pour chaque taille dans n.
+    """
+    plt.plot(n, temps_couplage, label="algo_couplage")
+    plt.plot(n, temps_glouton, label="algo_glouton")
     plt.title("courbe de temps en fonction de n")
     plt.xlabel("taille n")
     plt.ylabel("temps en s")
-    plt.legend(["algo_couplage", "algo_glouton"])
+    plt.legend()
     plt.savefig('courbe_t_n.png')
     plt.show()
 
-    # affichage diff/n
-    x = np.arange(len(n))  # the label locations
-    width = 0.35  # the width of the bars
+def plot_solution_histogram(n, solutions_couplage, solutions_glouton):
+    """
+    Affiche un histogramme comparant la taille de couverture trouvé par deux algorithmes en fonction de la taille n.
+    Fonction auxiliaire pour les méthodes "compare_en_n" et compare_en_p".
 
+    Paramètres:
+    - n: Une liste indiquant le nombre de sommets des graphes.
+    - solutions_couplage: Une liste représentant la couverture trouvée par l'algo_couplage pour chaque taille dans n.
+    """
+    x = np.arange(len(n))
+    width = 0.35
     fig, ax = plt.subplots()
-    rects1 = ax.bar(x - width/2, s_couplage, width, label='solutions couplage')
-    rects2 = ax.bar(x + width/2, s_glouton, width, label='solutuon glouton')
-
+    ax.bar(x - width/2, solutions_couplage, width, label='solutions couplage')
+    ax.bar(x + width/2, solutions_glouton, width, label='solutuon glouton')
     ax.set_xlabel('taille n')
     ax.set_ylabel('nombre de sommets')
     ax.set_title('nombre de sommets trouvé en fonction de n')
@@ -453,89 +438,84 @@ def compare_en_n():
     plt.savefig("hist_n.png")
     plt.show()
 
-    #écriture des solutions dans un fichier
-    #write_file(s_couplage, "solutions_couplage.txt")
-    #write_file(s_glouton, "solutions_glouton.txt")
+def compare_en_n(n_debut=10, n_fin=101, step=10):
+    """
+    Compare les temps d'exécution et les couvertures trouvées par deux algorithmes sur des graphes de tailles différentes.
 
-    #print(compare_algo(s_couplage, s_glouton))
+    Cette fonction génère des graphes aléatoires avec des tailles variant de `n_debut` à `n_fin` par étapes de `step`. 
+    Pour chaque graphe, elle mesure le temps d'exécution et le nombre de sommets trouvés(couverture) par `algo_couplage` et `algo_glouton`.
+    Ensuite, elle affiche deux graphiques: un montrant le temps d'exécution en fonction de la taille n du graphe 
+    et un autre montrant le nombre de sommets de la couverture trouvée en fonction de la taille du graphe.
+
+    Paramètres:
+    - n_debut: La taille initiale du graphe (valeur par défaut: 10).
+    - n_fin: La taille finale du graphe (valeur par défaut: 101).
+    - step: L'intervalle d'augmentation de la taille du graphe (valeur par défaut: 10).
+    """
+    temps_couplage,temps_glouton = [], []
+    solutions_couplage, solutions_glouton = [], []
+
+    n = list(range(n_debut, n_fin, step))
+
+    for i in n:
+        tc_i, tg_i, sc_i, sg_i = [], [], [], []
+
+        for _ in range(10):
+            G_gen = generate_graphe(i, 0.5)
+            
+            t, s = measure_algo_time_and_solution(algo_couplage, G_gen)
+            tc_i.append(t)
+            sc_i.append(s)
+
+            t, s = measure_algo_time_and_solution(algo_glouton, G_gen)
+            tg_i.append(t)
+            sg_i.append(s)
+
+        temps_couplage.append(np.mean(tc_i))
+        temps_glouton.append(np.mean(tg_i))
+        solutions_couplage.append(np.mean(sc_i))
+        solutions_glouton.append(np.mean(sg_i))
+
+    plot_time_graph(n,temps_couplage,temps_glouton)
+    plot_solution_histogram(n,solutions_couplage,solutions_glouton)
 
     return
 
 def compare_en_p():
-    t_couplage = []
-    s_couplage = []
-    t_glouton = []
-    s_glouton = []
+    """
+    Compare les temps d'exécution et les couvertures trouvées par deux algorithmes sur des graphes avec différentes probabilités.
+
+    Cette fonction génère des graphes aléatoires de taille fixe (100) avec des probabilités variant de 0.1 à 1.0 par pas de 0.1. 
+    Pour chaque graphe, elle mesure le temps d'exécution et le nombre de sommets trouvés par `algo_couplage` et `algo_glouton`.
+    Ensuite, elle affiche deux graphiques: un montrant le temps d'exécution en fonction de la probabilité
+    et un autre montrant le nombre de sommets trouvés pour la couverture en fonction de la probabilité.
+    """
+    temps_couplage,temps_glouton = [], []
+    solutions_couplage, solutions_glouton = [], []
 
     p_n = [i/10 for i in range(1, 11)]
 
     for p in p_n:
-        tc_i = []
-        tg_i = []
-        sc_i = []
-        sg_i = []
-        
-        #print("\n------------------------------------------------------------\n")
-        #print("i =%d\n"%i)
+        tc_i, tg_i, sc_i, sg_i = [], [], [], []
 
-        for j in range(10):
+        for _ in range(10):
             G_gen = generate_graphe(100, p)
 
-            #print("algo_couplage:")
-
-            debut_couplage = time.time()
-            s = algo_couplage(G_gen)
-            fin_couplage = time.time()
-
-            t = fin_couplage-debut_couplage
+            t, s = measure_algo_time_and_solution(algo_couplage, G_gen)
             tc_i.append(t)
-            sc_i.append(len(s))
-            #print("t = %f"%t)
-            #print("s =", s)
+            sc_i.append(s)
 
-            #print("\nalgo glouton:")
-
-            debut_glouton = time.time()
-            s = algo_glouton(G_gen)
-            fin_glouton = time.time()
-
-            t = fin_glouton-debut_glouton
+            t, s = measure_algo_time_and_solution(algo_glouton, G_gen)
             tg_i.append(t)
-            sg_i.append(len(s))
-            #print("t = %f"%t)
-            #print("s =", s)
+            sg_i.append(s)
 
-        t_couplage.append(np.mean(tc_i))
-        t_glouton.append(np.mean(tg_i))
-        s_couplage.append(np.mean(sc_i))
-        s_glouton.append(np.mean(sg_i))
+        temps_couplage.append(np.mean(tc_i))
+        temps_glouton.append(np.mean(tg_i))
+        solutions_couplage.append(np.mean(sc_i))
+        solutions_glouton.append(np.mean(sg_i))
 
-    # affichage t/n
-    plt.plot(p_n, t_couplage)
-    plt.plot(p_n, t_glouton)
-    plt.title("courbe de temps en fonction de p")
-    plt.xlabel("probabilité p")
-    plt.ylabel("temps en s")
-    plt.legend(["algo_couplage", "algo_glouton"])
-    plt.savefig('courbe_t_p.png')
-    plt.show() 
-
-    # affichage diff/n
-    x = np.arange(len(p_n))  # the label locations
-    width = 0.35  # the width of the bars
-
-    fig, ax = plt.subplots()
-    rects1 = ax.bar(x - width/2, s_couplage, width, label='solutions couplage')
-    rects2 = ax.bar(x + width/2, s_glouton, width, label='solutuon glouton')
-
-    ax.set_xlabel('probabilité p')
-    ax.set_ylabel('nombre de sommets')
-    ax.set_title('nombre de sommets trouvé en fonction de p')
-    ax.set_xticks(x)
-    ax.set_xticklabels(p_n)
-    ax.legend(loc="lower right")
-    plt.savefig("hist_p.png")
-    plt.show()
+    plot_time_graph(p_n,temps_couplage,temps_glouton)
+    plot_solution_histogram(p_n,solutions_couplage,solutions_glouton)
 
     #écriture des solutions dans un fichier
     #write_file(s_couplage, "solutions_couplage.txt")
@@ -546,7 +526,7 @@ def compare_en_p():
     return
 
 G = read_file("../instance/exemple_instance.txt")
-print(G)
+# print(G)
 #G = ([0, 1, 2, 3], [[1], [0, 2, 3], [1], [1]])
 #print("Q1 :")
 #C = branchement_ameliore_q1(G)
