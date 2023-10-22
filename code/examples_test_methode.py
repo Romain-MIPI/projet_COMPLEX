@@ -33,3 +33,28 @@ print(f"{couverture_couplage=}")
 
 couverture_glouton = algo_glouton(G)
 print(f"{couverture_glouton=}")
+# methodes de comparaison
+# compare_en_n()
+# compare_en_p()
+
+# 4. Branchement
+# branchement_basique = branchement(G)
+# print(f"{branchement_basique=}")
+# branchement_bornee = branchement_borne(G)
+# print(f"{branchement_bornee=}")
+# for i in range(10):
+#     g = generate_graphe(n=7, p=0.5)
+#     branchement_basique = branchement(g)
+#     branchement_bornee = branchement_borne(g)
+#     if len(branchement_basique) != len(branchement_bornee):
+#         print("ERREUR ici!!")
+#         raise ValueError(f"value error: {branchement_basique=}, {branchement_bornee=} ")
+    
+g=([0, 1, 2, 3, 4, 5, 6], [[1, 2, 5, 6], [0, 3, 4], [0, 5], [1, 5], [1, 5], [0, 2, 3, 4, 6], [0, 5]])
+print(branchement_borne(g))
+# for i in range(10):
+#     branchement_basique = branchement(g)
+#     branchement_bornee = branchement_borne(g)
+#     if len(branchement_basique) != len(branchement_bornee):
+#         print("ERREUR ici!!")
+#         raise ValueError(f"value error: {branchement_basique=}, {branchement_bornee=} ")
