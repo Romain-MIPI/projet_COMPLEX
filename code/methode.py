@@ -204,13 +204,6 @@ def algo_glouton(G):
 
     return C
 
-def compare_algo(t_c, t_g):
-    coef = []
-    for i in range(len(t_c)):
-        if len(t_c[i]) != 0 and len(t_g[i]) != 0:
-            coef.append(len(t_c[i])/len(t_g[i]))
-    return max(coef), np.mean(coef)
-
 # 4 -  Séparation et évaluation
 
 def branchement(G):
@@ -346,8 +339,6 @@ def branchement_ameliore_q1(G):
     pile = [(G, set())]
     compteur_noeud += 1
     while pile:
-        print("pile =", pile)
-        print("best_cover =", best_cover)
         current_graph, current_cover = pile.pop()
         aretes = get_liste_aretes(current_graph)
 
@@ -357,11 +348,9 @@ def branchement_ameliore_q1(G):
             if len(current_cover) < b_sup:
                 best_cover = current_cover
                 b_sup = len(best_cover)
-                print("changement best_cover =", best_cover)
         else:
             # Élagage si la borne supérieure est trop grande
             if borne_inf(current_graph)+len(current_cover) >= b_sup:
-                print("on elague")
                 continue
             u,v = aretes[0]
             couplage = algo_couplage(current_graph)
@@ -372,8 +361,6 @@ def branchement_ameliore_q1(G):
             # Exploration des nœuds enfants
             current_sommet, current_s_adj = current_graph
             voisin_u = set(current_s_adj[current_sommet.index(u)])
-            print("u, v =", u, v)
-            print("voisin_u =", voisin_u)
             pile.append((delete_sommet(current_graph, u),current_cover | {u}))
             pile.append((delete_ens_sommet(current_graph, voisin_u),current_cover | voisin_u))
             compteur_noeud += 2
@@ -400,8 +387,6 @@ def branchement_ameliore_q2(G):
     pile = [(G, set())]
     compteur_noeud += 1
     while pile:
-        print("pile =", pile)
-        print("best_cover =", best_cover)
         current_graph, current_cover = pile.pop()
         aretes = get_liste_aretes(current_graph)
 
@@ -411,11 +396,9 @@ def branchement_ameliore_q2(G):
             if len(current_cover) < b_sup:
                 best_cover = current_cover
                 b_sup = len(best_cover)
-                print("changement best_cover =", best_cover)
         else:
             # Élagage si la borne supérieure est trop grande
             if borne_inf(current_graph)+len(current_cover) >= b_sup:
-                print("on elague")
                 continue
             # Recherche du sommet de degré max
             u = sommet_degree_max(current_graph)
@@ -429,8 +412,6 @@ def branchement_ameliore_q2(G):
             b_sup = min(len(couplage),b_sup)
             # Exploration des nœuds enfants
             voisin_u = set(current_s_adj[current_sommet.index(u)])
-            print("u, v =", u, v)
-            print("voisin_u =", voisin_u)
             pile.append((delete_sommet(current_graph, u),current_cover | {u}))
             pile.append((delete_ens_sommet(current_graph, voisin_u),current_cover | voisin_u))
             compteur_noeud += 2
@@ -540,7 +521,6 @@ def plot_solution_histogram(n, solutions,compare_en):
     width = 0.35 / len(solutions) 
     fig, ax = plt.subplots()
 
-    print(f"{solutions=}")
     for idx, (algo_name, cover_sizes) in enumerate(solutions.items()):
         ax.bar(x + idx*width, cover_sizes, width, label=algo_name)
 
@@ -617,14 +597,14 @@ def compare_en_p(algos, p_step=10, n_fixe=100):
 
     Paramètres:
     - algos : Liste des algorithmes à évaluer.
-    - p_step : Nombre total d'étapes (ou intervalles) entre 0 et 1 pour définir la probabilité d'arête.
+    - p_step : Définit le pas de probabilité pour générer les valeurs de probabilité d'arête. 
     - n_fixe : Taille fixe du graphe pour chaque évaluation.
     """
     temps = {algo.__name__: [] for algo in algos}
     solutions = {algo.__name__: [] for algo in algos}
     nb_noeuds = {algo.__name__: [] for algo in algos if algo.__name__ in _BRANCHEMENT}
 
-    p_n = [round(i/p_step, 6) for i in range(0, int(np.ceil(p_step))+1)]
+    p_n = [round(x, 4) for x in np.arange(0.1, 1.1, 1/p_step)]
 
     for p in p_n:
         algo_times = {algo.__name__: [] for algo in algos}
@@ -652,11 +632,59 @@ def compare_en_p(algos, p_step=10, n_fixe=100):
     if nb_noeuds:
         plot_graph_solutions_noeuds(p_n,nb_noeuds,"p")
 
-    # écriture des solutions dans un fichier
-    #write_file(s_couplage, "solutions_couplage.txt")
-    #write_file(s_glouton, "solutions_glouton.txt")
-
-    #print(compare_algo(s_couplage, s_glouton))
-
     return
 
+def get_rapport_approximation(algos, n_debut=10, n_fin=101, step=10, p_fixe=0.5):
+    """
+    Compare le rapport d'approximation de différents algorithmes par rapport à une solution optimale.
+
+    Pour chaque graphe, la fonction évalue le nombre de sommets couverts par chaque algorithme et 
+    calcule le rapport d'approximation par rapport à la solution optimale.
+    Ensuite, elle produit une courbe illustrant le rapport d'approximation en fonction de la taille du graphe.
+
+    Precondition: donne un n_debut > 3 afin d'avoir des graphes avec aretes.
+
+    Paramètres:
+    - algos : Liste des algorithmes à évaluer (sans `branchement_ameliore_q2`).
+    - n_debut : Taille initiale du graphe.
+    - n_fin : Taille finale du graphe.
+    - step : Incrémentation de la taille du graphe.
+    - p_fixe : Probabilité d'arête fixe utilisée pour la génération du graphe.
+
+    Résultats:
+    Un graphique montrant le rapport d'approximation en fonction de la taille du graphe pour chaque algorithme.
+    """
+    solutions = {algo.__name__: [] for algo in algos}
+    solutions = solutions | {"branchement_ameliore_q2":[]}
+    algos.append(branchement_ameliore_q2)
+    pire_rapports = {algo.__name__: 1 for algo in algos}
+    n = list(range(n_debut, n_fin, step))
+    solutions_i = {algo.__name__: [] for algo in algos}
+    for i in n:
+        for _ in range(10):
+            G_gen = generate_graphe(i, p_fixe)
+            for algo in algos:
+                _, s, _= measure_algo_time_and_solution_and_noeuds(algo, G_gen)
+                solutions_i[algo.__name__].append(s)
+        for algo in algos:
+            solution_optim = np.array(solutions_i["branchement_ameliore_q2"])
+            non_zero_indices = solution_optim != 0
+            rapports = np.array(solutions_i[algo.__name__])[non_zero_indices] / solution_optim[non_zero_indices]
+            # En precondition, on ne donne pas de n < 3, il peut avoir des graphes sans arretes quand la taille est trop    
+            # petite, comme on a 10 valeurs, on doit surement avoir des valeurs non nulles. 
+            pire_rapports[algo.__name__] = max(max(rapports),pire_rapports[algo.__name__])
+            solutions[algo.__name__].append(np.mean(solutions_i[algo.__name__]))
+        
+    solution_optim = solutions.pop('branchement_ameliore_q2') 
+    line_styles = ['-', '--', '-.', ':', '_']
+    markers = ['o', 's', '*', '^', 'v', '<']
+    for index, (algo_name, solution_size) in enumerate(solutions.items()):
+        assert len(solution_optim) == len(solution_size)
+        rapports = np.array(solution_size) / np.array(solution_optim)
+        plt.plot(n, np.array(solution_size) / np.array(solution_optim), label=f"{algo_name} avec pire cas={pire_rapports[algo_name]}", linestyle=line_styles[index], marker=markers[index], linewidth=1.5)
+    plt.title(f"courbe de rapport d'approximation fonction de n avec {p_fixe=}")
+    plt.xlabel("valeur n")
+    plt.ylabel("nombre de sommets")
+    plt.legend()
+    plt.savefig('courbe_branchement_noeud_n.png')
+    plt.show()

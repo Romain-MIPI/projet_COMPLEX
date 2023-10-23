@@ -47,3 +47,35 @@ print(f"{branchement_ameliore_1=}")
 
 branchement_ameliore_2 = branchement_ameliore_q2(G)
 print(f"{branchement_ameliore_2}")
+
+### Algorithmes de comparaison:
+# 3.2
+# compare_en_n(algos=[algo_couplage,algo_glouton],n_debut=10,n_fin=101,step=10,p_fixe=0.5)
+# compare_en_p(algos=[algo_couplage,algo_glouton],p_step=10,n_fixe=100)
+
+# 4.1.2
+# compare_en_n(algos=[branchement],n_debut=3,n_fin=25,step=2,p_fixe=0.5)
+# compare_en_p(algos=[branchement],p_step=np.sqrt(20),n_fixe=20)
+
+# 4.2.2
+# compare_en_n(algos=[branchement_borne],n_debut=3,n_fin=25,step=2,p_fixe=0.5)
+# compare_en_p(algos=[branchement_borne],p_step=np.sqrt(20),n_fixe=20)
+
+# 4.2.3 (facultatif)
+# compare_en_p(algos=[algo_glouton,branchement_borne],p_step=np.sqrt(20),n_fixe=20)
+
+# 4.3.1
+# compare_en_n(algos=[branchement_ameliore_q1],n_debut=3,n_fin=25,step=2,p_fixe=0.5)
+# compare_en_p(algos=[branchement_ameliore_q1],p_step=np.sqrt(20),n_fixe=20)
+
+# 4.3.2
+# compare_en_n(algos=[branchement_ameliore_q2],n_debut=3,n_fin=25,step=2,p_fixe=0.5)
+# compare_en_p(algos=[branchement_ameliore_q2],p_step=np.sqrt(20),n_fixe=20)
+
+# 4.4 rapport d'approximation pour l'algo couplage et glouton
+# get_rapport_approximation([algo_couplage,algo_glouton],n_debut=3,n_fin=50,step=5,p_fixe=0.5)
+# get_rapport_approximation([algo_couplage, algo_glouton],n_debut=3,n_fin=50,step=5,p_fixe=0.5)
+
+# Comparer entre les branchements
+# compare_en_n(algos=[branchement,branchement_borne,branchement_ameliore_q1,branchement_ameliore_q2],n_debut=3,n_fin=15,step=2,p_fixe=0.5)
+# compare_en_p(algos=[branchement_borne,branchement_ameliore_q1,branchement_ameliore_q2],p_step=np.sqrt(20),n_fixe=20)
